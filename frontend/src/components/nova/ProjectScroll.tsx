@@ -214,13 +214,7 @@ export function ProjectScroll() {
                       </div>
                     </div>
 
-                    {/* Extra breathing room for the last item */}
-                    {isLast && (
-                      <div
-                        className="pointer-events-none absolute bottom-0 left-0 right-0 h-10"
-                        aria-hidden
-                      />
-                    )}
+
                   </div>
                 );
               })}
