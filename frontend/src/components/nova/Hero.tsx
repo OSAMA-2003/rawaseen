@@ -37,20 +37,25 @@ export function Hero() {
 
       gsap.registerPlugin(ScrollTrigger);
 
+      const isMobile = window.matchMedia(
+        "(max-width: 768px)"
+      ).matches;
+
       ctx = gsap.context(() => {
-        // -----------------------------------------
-        // INITIAL STATES
-        // -----------------------------------------
+        /*
+         * INITIAL STATES
+         */
 
         gsap.set(contentRef.current, {
+          autoAlpha: 1,
           opacity: 1,
           y: 0,
           scale: 1,
         });
 
         gsap.set(buildingRef.current, {
-          yPercent: 45,
-          scale: 0.96,
+          yPercent: isMobile ? 30 : 36,
+          scale: isMobile ? 0.98 : 0.96,
         });
 
         gsap.set(imageRef.current, {
@@ -58,6 +63,7 @@ export function Hero() {
         });
 
         gsap.set(metaRef.current, {
+          autoAlpha: 1,
           opacity: 1,
           y: 0,
         });
@@ -67,148 +73,139 @@ export function Hero() {
           y: 0,
         });
 
-        // -----------------------------------------
-        // ENTRANCE
-        // -----------------------------------------
+        /*
+         * LIGHT INTRO
+         */
 
         const intro = gsap.timeline({
           defaults: {
-            ease: "power3.out",
+            ease: "power2.out",
           },
         });
 
         intro.fromTo(
           contentRef.current,
           {
-            opacity: 0,
-            y: 30,
+            autoAlpha: 0,
+            y: 18,
           },
           {
-            opacity: 1,
+            autoAlpha: 1,
             y: 0,
-            duration: 1.2,
-            delay: 0.1,
+            duration: 0.7,
+            delay: 0.05,
+            clearProps: "opacity,visibility",
           }
         );
 
         intro.fromTo(
           metaRef.current,
           {
-            opacity: 0,
-            y: 15,
+            autoAlpha: 0,
+            y: 10,
           },
           {
-            opacity: 1,
+            autoAlpha: 1,
             y: 0,
-            duration: 0.8,
+            duration: 0.5,
+            clearProps: "opacity,visibility",
           },
-          "-=0.75"
+          "-=0.45"
         );
 
-        // -----------------------------------------
-        // CINEMATIC SCROLL — Seamless & Harmonic
-        // -----------------------------------------
+        /*
+         * SMOOTH SCROLL
+         */
 
         const scrollTl = gsap.timeline({
           scrollTrigger: {
             trigger: rootRef.current,
             start: "top top",
-            end: "+=140%",
+            end: isMobile ? "+=85%" : "+=100%",
             pin: true,
-            scrub: 1.2,
+            scrub: isMobile ? 0.2 : 0.35,
             invalidateOnRefresh: true,
+            anticipatePin: 1,
           },
         });
 
-        // Background — very gentle, organic perspective shift
-        scrollTl.fromTo(
+        /*
+         * BACKGROUND
+         */
+
+        scrollTl.to(
           backgroundRef.current,
           {
-            scale: 1,
-            yPercent: 0,
-          },
-          {
-            scale: 1.06,
-            yPercent: 3,
-            duration: 1.0,
+            scale: isMobile ? 1.025 : 1.04,
+            yPercent: isMobile ? 1 : 2,
+            duration: 1,
             ease: "none",
           },
           0
         );
 
-        // Text — moves gently upward and ALWAYS stays 100% visible (never hides when scrolling up or down)
-        scrollTl.fromTo(
+        /*
+         * CONTENT
+         *
+         * مهم:
+         * لا نستخدم opacity هنا حتى لا يختفي الكلام
+         * عند الرجوع بالسكرول لأعلى.
+         */
+
+        scrollTl.to(
           contentRef.current,
           {
-            y: 0,
-            scale: 1,
-            opacity: 1,
-          },
-          {
-            y: -50,
-            scale: 0.965,
-            opacity: 1,
-            duration: 0.7,
-            ease: "power1.out",
+            y: isMobile ? -14 : -30,
+            scale: isMobile ? 0.99 : 0.975,
+            duration: 0.75,
+            ease: "none",
           },
           0
         );
 
-        // Building — continuous, non-overlapping keyframes (zero jitter)
+        /*
+         * BUILDING
+         * المبنى يبدأ أوطى ويطلع بشكل بسيط
+         */
+
         scrollTl.to(
           buildingRef.current,
           {
-            keyframes: [
-              {
-                yPercent: 15,
-                scale: 0.985,
-                duration: 0.38,
-                ease: "power1.out",
-              },
-              {
-                yPercent: -3,
-                scale: 1,
-                duration: 0.34,
-                ease: "sine.inOut",
-              },
-              {
-                yPercent: -11,
-                scale: 1.025,
-                duration: 0.28,
-                ease: "sine.inOut",
-              },
-            ],
-            ease: "none",
-          },
-          0.03
-        );
-
-        // Subtle building image perspective zoom
-        scrollTl.fromTo(
-          imageRef.current,
-          {
-            scale: 1,
-          },
-          {
-            scale: 1.045,
-            duration: 1.0,
+            yPercent: isMobile ? 2 : -5,
+            scale: isMobile ? 1.01 : 1.02,
+            duration: 1,
             ease: "none",
           },
           0
         );
 
-        // Bottom information stays softly visible (never hides on scroll up)
-        scrollTl.fromTo(
+        /*
+         * BUILDING IMAGE
+         */
+
+        scrollTl.to(
+          imageRef.current,
+          {
+            scale: isMobile ? 1.018 : 1.035,
+            duration: 1,
+            ease: "none",
+          },
+          0
+        );
+
+        /*
+         * BOTTOM META
+         *
+         * تظل ظاهرة ولا تختفي.
+         */
+
+        scrollTl.to(
           metaRef.current,
           {
-            y: 0,
-            opacity: 1,
-          },
-          {
-            y: -18,
-            opacity: 0.7,
-            duration: 0.6,
-            ease: "power1.out",
+            y: isMobile ? -8 : -14,
+            opacity: 0.9,
+            duration: 0.7,
+            ease: "none",
           },
           0
         );
@@ -225,8 +222,9 @@ export function Hero() {
     e: React.MouseEvent<HTMLAnchorElement>
   ) => {
     e.preventDefault();
+
     scrollToTarget("#projects", {
-      duration: 1.4,
+      duration: 1,
       offset: 0,
     });
   };
@@ -235,12 +233,20 @@ export function Hero() {
     <section
       ref={rootRef}
       id="top"
-      className="relative h-screen min-h-[680px] w-full overflow-hidden bg-[#eff3f5] select-none"
+      className="
+        relative h-screen min-h-[680px] w-full
+        overflow-hidden bg-[#eff3f5] select-none
+      "
     >
       {/* BACKGROUND */}
       <div
         ref={backgroundRef}
-        className="absolute inset-[-4%] z-0 will-change-transform overflow-hidden"
+        className="
+          absolute inset-[-4%] z-0
+          overflow-hidden
+          will-change-transform
+          transform-gpu
+        "
       >
         <video
           autoPlay
@@ -249,37 +255,89 @@ export function Hero() {
           playsInline
           preload="auto"
           poster="/etqan-sky.jpg"
-          className="h-full w-full object-cover object-center pointer-events-none"
+          className="
+            pointer-events-none
+            h-full w-full
+            object-cover object-center
+          "
         >
           <source src="/hero-vid.mp4" type="video/mp4" />
         </video>
 
         <div className="absolute inset-0 bg-white/10" />
 
-        <div className="absolute inset-x-0 top-0 h-[45%] bg-gradient-to-b from-white/45 via-white/15 to-transparent" />
+        <div
+          className="
+            absolute inset-x-0 top-0 h-[45%]
+            bg-gradient-to-b
+            from-white/45
+            via-white/15
+            to-transparent
+          "
+        />
 
-        <div className="absolute inset-x-0 bottom-0 h-[65%] bg-gradient-to-t from-[#f8f6f2] via-[#f8f6f2]/40 to-transparent" />
+        <div
+          className="
+            absolute inset-x-0 bottom-0 h-[65%]
+            bg-gradient-to-t
+            from-[#f8f6f2]
+            via-[#f8f6f2]/40
+            to-transparent
+          "
+        />
       </div>
 
       {/* HERO CONTENT */}
       <div
         ref={contentRef}
-        className="absolute inset-x-0 top-0 z-30 mx-auto flex h-full w-full max-w-[1500px] flex-col items-center px-6 pt-[11vh] text-center will-change-transform sm:px-10 md:pt-[13vh]"
+        className="
+          absolute inset-x-0 top-0 z-30 mx-auto
+          flex h-full w-full max-w-[1500px]
+          flex-col items-center
+          px-6 pt-[9vh]
+          text-center
+          will-change-transform
+          transform-gpu
+          sm:px-10 sm:pt-[11vh]
+          md:pt-[13vh]
+        "
       >
-        {/* Brand Logo at Top of Hero */}
-        <div className="mt-10 mb-4 sm:mb-5 flex items-center justify-center">
+        {/* LOGO */}
+        <div
+          className="
+            mt-8 mb-4
+            flex items-center justify-center
+            sm:mt-10 sm:mb-5
+          "
+        >
           <img
             src="/logo-black.png"
             alt="Rawasin"
-            className="h-42 w-auto object-contain transition-transform duration-300 hover:scale-105"
+            className="
+              h-32 w-auto object-contain
+              transition-transform duration-300
+              hover:scale-105
+              sm:h-36
+              lg:h-42
+            "
             loading="eager"
             fetchPriority="high"
           />
         </div>
 
-        {/* Eyebrow */}
-        <div className="mb-4 sm:mb-5 flex items-center gap-3 text-[9px] uppercase tracking-[0.32em] text-[#556763] sm:text-[10px]">
-          <span className="h-px w-7 bg-[#556763]/30" />
+        {/* EYEBROW */}
+        <div
+          className="
+            mb-4 flex items-center gap-3
+            text-[9px] uppercase
+            tracking-[0.28em]
+            text-[#556763]
+            sm:mb-5
+            sm:text-[10px]
+            sm:tracking-[0.32em]
+          "
+        >
+          <span className="h-px w-6 bg-[#556763]/30 sm:w-7" />
 
           <span>
             {isArabic
@@ -287,42 +345,52 @@ export function Hero() {
               : "Spaces Worth Living"}
           </span>
 
-          <span className="h-px w-7 bg-[#556763]/30" />
+          <span className="h-px w-6 bg-[#556763]/30 sm:w-7" />
         </div>
 
-        {/* Heading */}
-        {/* <h1 className="max-w-5xl font-amiri text-[clamp(2.8rem,6.5vw,6.8rem)] font-semibold leading-[1.08] tracking-[-0.03em] text-[#182422]">
-          {isArabic ? (
-            <>
-              اكتشف
-              <br />
-              <span className="text-[#9e7f59]">
-                مساحتك القادمة
-              </span>
-            </>
-          ) : (
-            <>
-              Discover
-              <br />
-              <span className="text-[#9e7f59]">
-                Your Next Space
-              </span>
-            </>
-          )}
-        </h1> */}
-
-        {/* Description */}
-        <p className="mt-6 max-w-xl text-[13px] leading-8 text-[#4a5854] sm:text-base md:text-lg">
+        {/* DESCRIPTION */}
+        <p
+          className="
+            mt-4 max-w-[340px]
+            text-[12px] leading-7
+            text-[#4a5854]
+            sm:mt-6 sm:max-w-xl
+            sm:text-base sm:leading-8
+            md:text-lg
+          "
+        >
           {isArabic
             ? "مشاريع عقارية مختارة بعناية، ووحدات تناسب احتياجاتك، وتجربة أبسط للوصول إلى المكان المناسب."
             : "Discover carefully selected developments and properties designed around the way you want to live."}
         </p>
 
-        {/* Buttons */}
-        <div className="mt-8 flex flex-col items-center gap-4 sm:flex-row">
+        {/* BUTTONS */}
+        <div
+          className="
+            mt-6 flex flex-col
+            items-center gap-3
+            sm:mt-8 sm:flex-row sm:gap-4
+          "
+        >
           <Link
             href="/projects"
-            className="group inline-flex items-center gap-4 rounded-full bg-[#182422] px-7 py-4 text-xs font-semibold tracking-wide text-[#f8f6f2] shadow-md shadow-black/10 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#253633] hover:shadow-lg active:scale-[0.98] sm:px-8"
+            onClick={scrollToProjects}
+            className="
+              group inline-flex items-center gap-4
+              rounded-full
+              bg-[#182422]
+              px-6 py-3.5
+              text-xs font-semibold
+              tracking-wide
+              text-[#f8f6f2]
+              shadow-md shadow-black/10
+              transition-all duration-300
+              hover:-translate-y-0.5
+              hover:bg-[#253633]
+              hover:shadow-lg
+              active:scale-[0.98]
+              sm:px-8 sm:py-4
+            "
           >
             <span>
               {t("hero.exploreBtn") ||
@@ -332,14 +400,31 @@ export function Hero() {
             </span>
 
             <ArrowDown
-              className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-1"
+              className="
+                h-4 w-4
+                transition-transform duration-300
+                group-hover:translate-y-1
+              "
               strokeWidth={1.5}
             />
           </Link>
 
           <Link
             href="/units"
-            className="group inline-flex items-center gap-2 rounded-full px-5 py-3.5 text-xs font-medium text-[#2d3e3a] bg-white/50 hover:bg-white/90 backdrop-blur-md border border-[#182422]/10 transition-all duration-300 hover:border-[#182422]/20 shadow-xs"
+            className="
+              group inline-flex items-center gap-2
+              rounded-full
+              border border-[#182422]/10
+              bg-white/50
+              px-5 py-3.5
+              text-xs font-medium
+              text-[#2d3e3a]
+              shadow-xs
+              backdrop-blur-md
+              transition-all duration-300
+              hover:border-[#182422]/20
+              hover:bg-white/90
+            "
           >
             <span>
               {isArabic
@@ -348,8 +433,12 @@ export function Hero() {
             </span>
 
             <ArrowUpLeft
-              className={`h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 ${isRTL ? "-rotate-90" : ""
-                }`}
+              className={`
+                h-3.5 w-3.5
+                transition-transform duration-300
+                group-hover:-translate-y-0.5
+                ${isRTL ? "-rotate-90" : ""}
+              `}
               strokeWidth={1.5}
             />
           </Link>
@@ -359,13 +448,26 @@ export function Hero() {
       {/* BUILDING */}
       <div
         ref={buildingRef}
-        className="absolute inset-x-0 bottom-[-10%] z-20 mx-auto flex w-full justify-center will-change-transform transform-gpu"
+        className="
+          absolute inset-x-0 bottom-[5%] z-20 mx-auto
+          flex w-full justify-center
+          will-change-transform
+          transform-gpu
+          sm:bottom-[-10%]
+          lg:bottom-[-12%]
+        "
         style={{
           transform: "translate3d(0, 0, 0)",
           backfaceVisibility: "hidden",
         }}
       >
-        <div className="relative w-[112%] max-w-[1500px] sm:w-[105%] lg:w-[96%]">
+        <div
+          className="
+            relative w-[106%] max-w-[1500px]
+            sm:w-[103%]
+            lg:w-[96%]
+          "
+        >
           <img
             ref={imageRef}
             src="/hero-building.png"
@@ -374,7 +476,13 @@ export function Hero() {
                 ? "مشروع عقاري"
                 : "Featured real estate development"
             }
-            className="block h-auto w-full origin-center object-contain drop-shadow-[0_-25px_70px_rgba(0,0,0,0.16)]"
+            className="
+              block h-auto w-full
+              origin-center object-contain
+              drop-shadow-[0_-25px_70px_rgba(0,0,0,0.16)]
+              will-change-transform
+              transform-gpu
+            "
             loading="eager"
             fetchPriority="high"
             style={{
@@ -383,18 +491,47 @@ export function Hero() {
             }}
           />
 
-          {/* Ground fade — gentle mist merging with the page */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-20 h-[35%] bg-gradient-to-t from-[#f8f6f2] via-[#f8f6f2]/40 to-transparent" />
+          {/* GROUND FADE */}
+          <div
+            className="
+              pointer-events-none
+              absolute inset-x-0 bottom-0
+              z-20 h-[35%]
+              bg-gradient-to-t
+              from-[#f8f6f2]
+              via-[#f8f6f2]/40
+              to-transparent
+            "
+          />
 
-          {/* Soft atmospheric light */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-white/20 to-transparent" />
+          {/* ATMOSPHERIC LIGHT */}
+          <div
+            className="
+              pointer-events-none
+              absolute inset-x-0 top-0
+              z-20 h-28
+              bg-gradient-to-b
+              from-white/20
+              to-transparent
+            "
+          />
         </div>
       </div>
 
       {/* BOTTOM META */}
       <div
         ref={metaRef}
-        className="absolute bottom-7 left-0 right-0 z-40 mx-auto flex max-w-[1500px] items-end justify-between px-6 text-[9px] uppercase tracking-[0.22em] text-[#485652]/75 will-change-transform sm:px-10"
+        className="
+          absolute bottom-6 left-0 right-0 z-40
+          mx-auto flex max-w-[1500px]
+          items-end justify-between
+          px-6
+          text-[9px] uppercase
+          tracking-[0.2em]
+          text-[#485652]/75
+          will-change-transform
+          sm:bottom-7 sm:px-10
+        "
       >
         <div className="hidden sm:block">
           <span className="mb-1 block">
@@ -424,7 +561,16 @@ export function Hero() {
       </div>
 
       {/* BOTTOM TRANSITION */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-50 h-28 bg-gradient-to-t from-[#f8f6f2] to-transparent" />
+      <div
+        className="
+          pointer-events-none
+          absolute inset-x-0 bottom-0
+          z-50 h-28
+          bg-gradient-to-t
+          from-[#f8f6f2]
+          to-transparent
+        "
+      />
     </section>
   );
 }
