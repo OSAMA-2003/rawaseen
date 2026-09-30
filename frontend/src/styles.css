@@ -1,0 +1,220 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+/* ==========================================================================
+   Local Amiri Font from public/fonts
+   ========================================================================== */
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri-Regular-1.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Amiri";
+  src: url("/fonts/Amiri-Bold-1.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --radius-sm: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-stone-warm: var(--stone-warm);
+  --color-sand: var(--sand);
+  --color-ink: var(--ink);
+  --color-metal: var(--metal);
+  --color-line: var(--line);
+  --font-display: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Archivo", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --font-amiri: "Amiri", serif;
+}
+
+:root {
+  --radius: 0px;
+  /* Soothing, eye-friendly architectural palette */
+  --background: #f8f6f2;
+  --foreground: #182220;
+  --ink: #141c1a;
+  --stone-warm: #f2eee7;
+  --sand: #e6dfd3;
+  --metal: #9e825e;
+  --line: rgba(24, 34, 32, 0.08);
+  --card: #ffffff;
+  --card-foreground: #182220;
+  --popover: #ffffff;
+  --popover-foreground: #182220;
+  --primary: #182220;
+  --primary-foreground: #f8f6f2;
+  --secondary: #f2eee7;
+  --secondary-foreground: #182220;
+  --muted: #f2eee7;
+  --muted-foreground: #50605c;
+  --accent: #bfa175;
+  --accent-foreground: #182220;
+  --destructive: #b33939;
+  --destructive-foreground: #f8f6f2;
+  --border: rgba(24, 34, 32, 0.08);
+  --input: rgba(24, 34, 32, 0.12);
+  --ring: #bfa175;
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background: #182220;
+    color: #f8f6f2;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1.05;
+  }
+
+  html[dir="rtl"],
+  [dir="rtl"] body {
+    font-family: "Amiri", "IBM Plex Sans Arabic", serif;
+  }
+
+  [dir="rtl"] h1,
+  [dir="rtl"] h2,
+  [dir="rtl"] h3,
+  [dir="rtl"] h4,
+  [dir="rtl"] h5,
+  [dir="rtl"] h6 {
+    font-family: "Amiri", serif;
+    font-weight: 700;
+    text-transform: none !important;
+    letter-spacing: normal !important;
+    line-height: 1.35 !important;
+  }
+
+  [dir="rtl"] p,
+  [dir="rtl"] span,
+  [dir="rtl"] a,
+  [dir="rtl"] button {
+    line-height: 1.75;
+  }
+
+  [dir="rtl"] p,
+  [dir="rtl"] span,
+  [dir="rtl"] a,
+  [dir="rtl"] button,
+  [dir="rtl"] input,
+  [dir="rtl"] select,
+  [dir="rtl"] textarea,
+  [dir="rtl"] dt,
+  [dir="rtl"] dd,
+  [dir="rtl"] label {
+    font-family: "Amiri", serif;
+  }
+
+  [dir="rtl"] .meta {
+    font-family: "Amiri", var(--font-mono), monospace !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  /* Any explicit Arabic text elements */
+  [lang="ar"],
+  :lang(ar),
+  .font-amiri {
+    font-family: "Amiri", serif !important;
+  }
+}
+
+/* Editorial metadata label */
+@utility meta {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@utility rule-top {
+  border-top: 1px solid var(--line);
+}
+
+/* Line-reveal mask used by GSAP headline animations */
+@utility line-mask {
+  display: block;
+  overflow: hidden;
+}
+
+@utility link-underline {
+  position: relative;
+
+  &::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+    height: 1px;
+    width: 100%;
+    background: currentColor;
+    transform: scaleX(0);
+    transform-origin: right;
+    transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    transform: scaleX(1);
+    transform-origin: left;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
