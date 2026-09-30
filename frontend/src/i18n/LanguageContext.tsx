@@ -99,13 +99,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
   const { t } = useI18nTranslation();
-  const [language, setLanguage] = useState<SupportedLanguage>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("rawasin_lang");
-      if (saved === "ar" || saved === "en") return saved;
-    }
-    return (i18n.language as SupportedLanguage) || "en";
-  });
+  const [language, setLanguage] = useState<SupportedLanguage>("ar");
 
   const direction = language === "ar" ? "rtl" : "ltr";
   const isRTL = direction === "rtl";
@@ -127,6 +121,9 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     syncDocument(language);
     i18n.changeLanguage(language);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("rawasin_lang", "ar");
+    }
   }, [language, syncDocument]);
 
   const changeLanguage = (lang: SupportedLanguage) => {

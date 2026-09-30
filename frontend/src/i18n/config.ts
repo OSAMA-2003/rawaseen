@@ -11,18 +11,12 @@ export const resources = {
 
 export type SupportedLanguage = "en" | "ar";
 
-const initialLanguage = ((): SupportedLanguage => {
-  if (typeof window !== "undefined") {
-    const saved = localStorage.getItem("rawasin_lang");
-    if (saved === "ar" || saved === "en") return saved;
-  }
-  return "en";
-})();
+const initialLanguage: SupportedLanguage = "ar";
 
 if (!i18n.isInitialized) {
   i18n.use(initReactI18next).init({
-    lng: initialLanguage,
-    fallbackLng: "en",
+    lng: "ar",
+    fallbackLng: "ar",
     defaultNS: "common",
     resources,
     interpolation: {

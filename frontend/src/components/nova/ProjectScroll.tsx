@@ -17,15 +17,34 @@ export function ProjectScroll() {
   const [active, setActive] = useState(0);
   const { t, isRTL } = useLanguage();
 
-  const rawChapters = (t("projectScroll.chapters", { returnObjects: true }) as unknown as Array<{
-    n: string;
-    title: string;
-    body: string;
-  }>) || [
-      { n: "01", title: "Vision", body: "Every development begins as a question about the city it will belong to." },
-      { n: "02", title: "Form", body: "Mass, shadow and proportion, calibrated against the light of the peninsula." },
-      { n: "03", title: "Space", body: "Interiors drawn around stillness — daylight, stone and generous volume." },
-      { n: "04", title: "Experience", body: "A place is finished only when people stop noticing the architecture." },
+  const rawChapters =
+    (t("projectScroll.chapters", {
+      returnObjects: true,
+    }) as unknown as Array<{
+      n: string;
+      title: string;
+      body: string;
+    }>) || [
+      {
+        n: "01",
+        title: "Vision",
+        body: "Every development begins as a question about the city it will belong to.",
+      },
+      {
+        n: "02",
+        title: "Form",
+        body: "Mass, shadow and proportion, calibrated against the light of the peninsula.",
+      },
+      {
+        n: "03",
+        title: "Space",
+        body: "Interiors drawn around stillness — daylight, stone and generous volume.",
+      },
+      {
+        n: "04",
+        title: "Experience",
+        body: "A place is finished only when people stop noticing the architecture.",
+      },
     ];
 
   const chapters = rawChapters.map((c, i) => ({
@@ -46,22 +65,27 @@ export function ProjectScroll() {
         import("gsap"),
         import("gsap/ScrollTrigger"),
       ]);
+
       if (cancelled || !root.current) return;
+
       gsap.registerPlugin(ScrollTrigger);
 
       ctx = gsap.context(() => {
         const mobile = isMobileViewport();
+
         ScrollTrigger.create({
           trigger: root.current!,
           start: "top top",
           end: "bottom bottom",
           pin: "[data-pin]",
           pinSpacing: false,
+
           onUpdate: (self) => {
             const i = Math.min(
               chapters.length - 1,
               Math.floor(self.progress * chapters.length),
             );
+
             setActive((prev) => (prev === i ? prev : i));
           },
         });
@@ -94,9 +118,14 @@ export function ProjectScroll() {
       className="relative"
       style={{ height: `${chapters.length * 100}svh` }}
     >
-      <div data-pin className="h-[100svh]   w-full overflow-hidden bg-stone-warm">
-        <div className="mx-auto grid h-full max-w-[1680px] grid-cols-1 items-stretch gap-0 px-5 md:grid-cols-12 md:px-10">
-          <div className="relative mt-20 col-span-1 h-[46svh] self-center overflow-hidden md:col-span-7 md:h-[74svh]">
+      <div
+        data-pin
+        className="h-[100svh] w-full overflow-hidden bg-stone-warm"
+      >
+        <div className="mx-auto grid h-full max-w-[1680px] grid-cols-1 gap-0 px-5 md:grid-cols-12 md:px-10">
+
+          {/* IMAGE */}
+          <div className="relative mt-20 col-span-1 h-[46svh] self-center overflow-hidden md:col-span-7 md:mt-0 md:h-[74svh]">
             {chapters.map((c, i) => (
               <img
                 key={c.n}
@@ -113,6 +142,7 @@ export function ProjectScroll() {
                 }}
               />
             ))}
+
             <div
               data-lines
               className="pointer-events-none absolute inset-0 origin-top scale-y-0"
@@ -123,30 +153,79 @@ export function ProjectScroll() {
             </div>
           </div>
 
-          <div className={`col-span-1 flex flex-col justify-center gap-6 py-8 md:col-span-5 ${isRTL ? "md:pr-16" : "md:pl-16"}`}>
-            {chapters.map((c, i) => {
-              const on = active === i;
-              return (
-                <div
-                  key={c.n}
-                  className="rule-top pt-4 transition-opacity duration-500"
-                  style={{ opacity: on ? 1 : 0.24 }}
-                >
-                  <div className="flex items-baseline gap-4">
-                    <span className="font-mono text-[0.7rem] tracking-[0.2em] text-metal">
-                      {c.n}
-                    </span>
-                    <h3 className="text-[7vw] font-medium md:text-[3vw]">{c.title}</h3>
-                  </div>
-                  <p
-                    className="max-w-[38ch] overflow-hidden text-sm leading-relaxed text-muted-foreground transition-[max-height,opacity] duration-700"
-                    style={{ maxHeight: on ? 120 : 0, opacity: on ? 1 : 0 }}
+          {/* CONTENT */}
+          <div
+            className={`
+              col-span-1
+              flex
+              min-h-0
+              flex-col
+              justify-center
+              py-10
+              md:col-span-5
+              md:py-16
+              ${isRTL ? "md:pr-16" : "md:pl-16"}
+            `}
+          >
+            <div className="flex flex-col justify-center">
+
+              {chapters.map((c, i) => {
+                const on = active === i;
+                const isLast = i === chapters.length - 1;
+
+                return (
+                  <div
+                    key={c.n}
+                    className={`
+                      rule-top
+                      relative
+                      pt-4
+                      transition-[opacity,transform]
+                      duration-700
+                      ease-[cubic-bezier(.22,1,.36,1)]
+                      ${isLast ? "pb-4" : "pb-1"}
+                    `}
+                    style={{
+                      opacity: on ? 1 : 0.24,
+                      transform: on ? "translateX(0)" : "translateX(0)",
+                    }}
                   >
-                    {c.body}
-                  </p>
-                </div>
-              );
-            })}
+                    <div className="flex items-baseline gap-4">
+                      <span className="font-mono text-[0.7rem] tracking-[0.2em] text-metal">
+                        {c.n}
+                      </span>
+
+                      <h3 className="text-[7vw] font-medium leading-none md:text-[3vw]">
+                        {c.title}
+                      </h3>
+                    </div>
+
+                    <div
+                      className="grid transition-[grid-template-rows,opacity] duration-700"
+                      style={{
+                        gridTemplateRows: on ? "1fr" : "0fr",
+                        opacity: on ? 1 : 0,
+                      }}
+                    >
+                      <div className="overflow-hidden">
+                        <p className="mt-4 max-w-[38ch] pb-1 text-sm leading-relaxed text-muted-foreground">
+                          {c.body}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Extra breathing room for the last item */}
+                    {isLast && (
+                      <div
+                        className="pointer-events-none absolute bottom-0 left-0 right-0 h-10"
+                        aria-hidden
+                      />
+                    )}
+                  </div>
+                );
+              })}
+
+            </div>
           </div>
         </div>
       </div>
