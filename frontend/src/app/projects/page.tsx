@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo } from "react";
 import Link from "next/link";
 import {
   Building2,
@@ -50,7 +50,20 @@ export default function PublicProjectsPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
   const [selectedProjectForDetails, setSelectedProjectForDetails] = useState<IProject | null>(null);
 
+  const pageTitleRef = useRef<HTMLDivElement>(null);
   const { t, getLocalized, formatPrice, isRTL, language, localizeStatus, localizeAmenity, localizeCity } = useLanguage();
+
+  useEffect(() => {
+    if (!pageTitleRef.current) return;
+    (async () => {
+      const { gsap } = await import("gsap");
+      gsap.fromTo(
+        pageTitleRef.current!.querySelectorAll("[data-page-title-animate]"),
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.9, stagger: 0.1, ease: "power3.out" }
+      );
+    })();
+  }, [language]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -123,16 +136,16 @@ export default function PublicProjectsPage() {
       {/* Hero Header */}
       <section className="pt-36 pb-12 px-5 md:px-10 border-b border-stone-200 bg-white">
         <div className="mx-auto max-w-[1680px]">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div ref={pageTitleRef} className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.25em] text-[#9b7c52] mb-3">
+              <div data-page-title-animate className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.25em] text-[#9b7c52] mb-3">
                 <Sparkles className="h-3 w-3" />
                 <span>{t("projectsPage.tag")}</span>
               </div>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-normal tracking-tight uppercase text-stone-950">
+              <h1 data-page-title-animate className="text-4xl md:text-6xl lg:text-7xl font-normal tracking-tight uppercase text-stone-950">
                 {t("projectsPage.title")}
               </h1>
-              <p className="mt-4 font-mono text-xs md:text-sm text-stone-600 max-w-2xl leading-relaxed">
+              <p data-page-title-animate className="mt-4 font-mono text-xs md:text-sm text-stone-600 max-w-2xl leading-relaxed">
                 {language === "ar"
                   ? "استكشف أرقى المجمعات السكنية والتجارية الاستثنائية المطابقة لاحتياجاتك الدقيقة وخيارات السداد المرنة."
                   : t("projectsPage.sub")}

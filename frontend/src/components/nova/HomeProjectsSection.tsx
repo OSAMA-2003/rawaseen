@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   Building2,
@@ -16,12 +16,14 @@ import { api } from "@/lib/api";
 import { IProject, ProjectStatus } from "@/types/project";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { STATIC_PROJECTS } from "@/data/staticData";
+import { prefersReducedMotion } from "@/lib/motion";
 
 interface HomeProjectsSectionProps {
   onOpenInquiry?: (projectId?: string) => void;
 }
 
 export function HomeProjectsSection({ onOpenInquiry }: HomeProjectsSectionProps) {
+  const sectionRef = useRef<HTMLElement>(null);
   const [projects, setProjects] = useState<IProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { t, getLocalized, formatPrice, isRTL, language, localizeStatus, localizeAmenity, localizeCity } = useLanguage();
@@ -54,6 +56,48 @@ export function HomeProjectsSection({ onOpenInquiry }: HomeProjectsSectionProps)
     };
   }, []);
 
+  // GSAP Title reveal
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el || prefersReducedMotion()) return;
+
+    let ctx: { revert: () => void } | undefined;
+    let cancelled = false;
+
+    (async () => {
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
+      if (cancelled || !sectionRef.current) return;
+      gsap.registerPlugin(ScrollTrigger);
+
+      ctx = gsap.context(() => {
+        gsap.fromTo(
+          "[data-home-title-animate]",
+          { opacity: 0, y: 35 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1,
+            stagger: 0.12,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 80%",
+              once: true,
+            },
+          }
+        );
+      }, sectionRef);
+    })();
+
+    return () => {
+      cancelled = true;
+      ctx?.revert();
+    };
+  }, [language]);
+
   const getStatusBadge = (status: ProjectStatus) => {
     switch (status) {
       case "ACTIVE":
@@ -74,19 +118,19 @@ export function HomeProjectsSection({ onOpenInquiry }: HomeProjectsSectionProps)
   };
 
   return (
-    <section id="home-projects" className="relative bg-[#f8f6f2] text-[#182220] py-24 md:py-32 px-5 md:px-10 border-t border-[#e8e4dc]">
+    <section ref={sectionRef} id="home-projects" className="relative bg-[#f8f6f2] text-[#182220] py-24 md:py-32 px-5 md:px-10 border-t border-[#e8e4dc]">
       <div className="mx-auto max-w-[1680px]">
         {/* Section Header */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-12 border-b border-[#e8e4dc]">
           <div>
-            <div className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.25em] text-[#9e825e] mb-3">
+            <div data-home-title-animate className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.25em] text-[#9e825e] mb-3">
               <Sparkles className="h-3 w-3" />
               <span>{t("homeProjects.sectionNum")}</span>
             </div>
-            <h2 className="text-3xl md:text-5xl lg:text-6xl font-normal tracking-tight uppercase text-[#182220]">
+            <h2 data-home-title-animate className="text-3xl md:text-5xl lg:text-6xl font-normal tracking-tight uppercase text-[#182220]">
               {t("homeProjects.title")}
             </h2>
-            <p className="mt-3 font-mono text-xs md:text-sm text-[#50605c] max-w-2xl leading-relaxed">
+            <p data-home-title-animate className="mt-3 font-mono text-xs md:text-sm text-[#50605c] max-w-2xl leading-relaxed">
               {t("homeProjects.subtitle")}
             </p>
           </div>

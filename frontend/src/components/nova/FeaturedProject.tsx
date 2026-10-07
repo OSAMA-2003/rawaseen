@@ -33,6 +33,21 @@ export function FeaturedProject() {
       gsap.registerPlugin(ScrollTrigger);
       ctx = gsap.context(() => {
         gsap.fromTo(
+          "[data-featured-title]",
+          { opacity: 0, y: 45 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1.1,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: root.current,
+              start: "top 80%",
+              once: true,
+            },
+          }
+        );
+        gsap.fromTo(
           "[data-parallax]",
           { yPercent: -8, scale: 1.14 },
           {
@@ -82,7 +97,7 @@ export function FeaturedProject() {
           <p className="meta hidden md:block">{t("featured.status")}</p>
         </div>
 
-        <h2 className="text-[16vw] font-medium leading-[0.95] md:text-[11vw]">
+        <h2 data-featured-title className="text-[16vw] font-medium leading-[0.95] md:text-[11vw] will-change-transform">
           {t("featured.title")}
         </h2>
 

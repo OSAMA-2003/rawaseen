@@ -79,22 +79,23 @@ export function Hero() {
 
         const intro = gsap.timeline({
           defaults: {
-            ease: "power2.out",
+            ease: "power3.out",
           },
         });
 
         intro.fromTo(
-          contentRef.current,
+          "[data-hero-reveal]",
           {
             autoAlpha: 0,
-            y: 18,
+            y: 28,
           },
           {
             autoAlpha: 1,
             y: 0,
-            duration: 0.7,
+            duration: 0.9,
+            stagger: 0.1,
             delay: 0.05,
-            clearProps: "opacity,visibility",
+            clearProps: "opacity,visibility,transform",
           }
         );
 
@@ -110,7 +111,7 @@ export function Hero() {
             duration: 0.5,
             clearProps: "opacity,visibility",
           },
-          "-=0.45"
+          "-=0.4"
         );
 
         /*
@@ -334,6 +335,7 @@ export function Hero() {
       >
         {/* LOGO */}
         <div
+          data-hero-reveal
           className="
             mt-8 mb-4
             flex items-center justify-center
@@ -357,6 +359,7 @@ export function Hero() {
 
         {/* EYEBROW */}
         <div
+          data-hero-reveal
           className="
             mb-4 flex items-center gap-3
             text-[9px] uppercase
@@ -380,6 +383,7 @@ export function Hero() {
 
         {/* DESCRIPTION */}
         <p
+          data-hero-reveal
           className="
             mt-4 max-w-[340px]
             text-[12px] leading-7
@@ -396,6 +400,7 @@ export function Hero() {
 
         {/* BUTTONS */}
         <div
+          data-hero-reveal
           className="
             mt-6 flex flex-col
             items-center gap-3
@@ -404,7 +409,6 @@ export function Hero() {
         >
           <Link
             href="/projects"
-            onClick={scrollToProjects}
             className="
               group inline-flex items-center gap-4
               rounded-full

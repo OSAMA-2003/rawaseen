@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, Suspense } from "react";
+import React, { useEffect, useRef, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { Navigation } from "@/components/nova/Navigation";
 import { PublicInquiryModal } from "@/components/public/PublicInquiryModal";
+import { UnitsFilterBar, UnitFilterCriteria } from "@/components/units/UnitsFilterBar";
 import { api } from "@/lib/api";
 import { IProject } from "@/types/project";
 import { IUnit, UnitStatus, UnitType } from "@/types/unit";
@@ -33,13 +34,26 @@ function UnitsContent() {
   const [projects, setProjects] = useState<IProject[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Filters state
-  const [selectedProjectId, setSelectedProjectId] = useState<string>(initialProjectId);
-  const [selectedType, setSelectedType] = useState<string>("ALL");
-  const [selectedStatus, setSelectedStatus] = useState<string>("AVAILABLE");
-  const [selectedBedrooms, setSelectedBedrooms] = useState<string>("ALL");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"priceAsc" | "priceDesc" | "areaDesc">("priceAsc");
+  // Advanced Filters state
+  const initialCriteria: UnitFilterCriteria = useMemo(
+    () => ({
+      searchQuery: "",
+      projectId: initialProjectId,
+      city: "ALL",
+      area: "ALL",
+      unitType: "ALL",
+      status: "AVAILABLE",
+      bedrooms: "ALL",
+      bathrooms: "ALL",
+      finishing: "ALL",
+      view: "ALL",
+      availableOnly: false,
+      sortBy: "priceAsc",
+    }),
+    [initialProjectId]
+  );
+
+  const [criteria, setCriteria] = useState<UnitFilterCriteria>(initialCriteria);
 
   // Inquire & Specs Modals
   const [isInquiryModalOpen, setIsInquiryModalOpen] = useState(false);
@@ -48,6 +62,7 @@ function UnitsContent() {
   const [inquiryUnitNumber, setInquiryUnitNumber] = useState<string | undefined>(undefined);
   const [detailUnit, setDetailUnit] = useState<IUnit | null>(null);
 
+  const pageTitleRef = useRef<HTMLDivElement>(null);
   const {
     t,
     getLocalized,
@@ -61,11 +76,23 @@ function UnitsContent() {
     localizeView,
   } = useLanguage();
 
-  // Update selectedProjectId if URL param changes
+  useEffect(() => {
+    if (!pageTitleRef.current) return;
+    (async () => {
+      const { gsap } = await import("gsap");
+      gsap.fromTo(
+        pageTitleRef.current!.querySelectorAll("[data-page-title-animate]"),
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.9, stagger: 0.1, ease: "power3.out" }
+      );
+    })();
+  }, [language]);
+
+  // Update criteria.projectId if URL param changes
   useEffect(() => {
     const paramId = searchParams.get("projectId");
     if (paramId) {
-      setSelectedProjectId(paramId);
+      setCriteria((prev) => ({ ...prev, projectId: paramId }));
     }
   }, [searchParams]);
 
@@ -111,56 +138,161 @@ function UnitsContent() {
     fetchData();
   }, []);
 
-  const filteredUnits = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
-
-    let list = units.filter((unit) => {
-      // Project filter
-      const unitProjectId = typeof unit.projectId === "object" ? unit.projectId?._id : unit.projectId;
-      const matchesProject =
-        selectedProjectId === "ALL" || unitProjectId === selectedProjectId;
-
-      // Type filter
-      const matchesType = selectedType === "ALL" || unit.type === selectedType;
-
-      // Status filter
-      const matchesStatus = selectedStatus === "ALL" || unit.status === selectedStatus;
-
-      // Bedrooms filter
-      let matchesBedrooms = true;
-      if (selectedBedrooms !== "ALL") {
-        const bedNum = parseInt(selectedBedrooms, 10);
-        if (selectedBedrooms === "4+") {
-          matchesBedrooms = unit.bedrooms >= 4;
-        } else {
-          matchesBedrooms = unit.bedrooms === bedNum;
-        }
-      }
-
-      // Search query
-      const projObj = typeof unit.projectId === "object" ? unit.projectId : null;
-      const projectNameEn = projObj?.name?.en?.toLowerCase() || "";
-      const projectNameAr = projObj?.name?.ar || "";
-      const matchesSearch =
-        !q ||
-        unit.unitNumber.toLowerCase().includes(q) ||
-        projectNameEn.includes(q) ||
-        projectNameAr.includes(q) ||
-        unit.type.toLowerCase().includes(q);
-
-      return matchesProject && matchesType && matchesStatus && matchesBedrooms && matchesSearch;
+  // Distinct cities
+  const availableCities = useMemo(() => {
+    const set = new Set<string>();
+    projects.forEach((p) => {
+      if (p.location?.city) set.add(p.location.city);
     });
+    return Array.from(set);
+  }, [projects]);
 
-    if (sortBy === "priceAsc") {
-      list.sort((a, b) => a.price - b.price);
-    } else if (sortBy === "priceDesc") {
-      list.sort((a, b) => b.price - a.price);
-    } else if (sortBy === "areaDesc") {
-      list.sort((a, b) => b.area - a.area);
-    }
+  // Distinct areas
+  const availableAreas = useMemo(() => {
+    const set = new Set<string>();
+    projects.forEach((p) => {
+      if (p.location?.area) set.add(p.location.area);
+    });
+    return Array.from(set);
+  }, [projects]);
 
-    return list;
-  }, [units, selectedProjectId, selectedType, selectedStatus, selectedBedrooms, searchQuery, sortBy]);
+  const filteredUnits = useMemo(() => {
+    const q = (criteria.searchQuery || "").toLowerCase().trim();
+
+    return units
+      .filter((unit) => {
+        const unitProjectId =
+          typeof unit.projectId === "object"
+            ? unit.projectId?._id
+            : unit.projectId;
+        const projObj =
+          (typeof unit.projectId === "object"
+            ? unit.projectId
+            : projects.find((p) => p._id === unitProjectId)) as any;
+
+        // Project filter
+        if (
+          criteria.projectId &&
+          criteria.projectId !== "ALL" &&
+          unitProjectId !== criteria.projectId
+        ) {
+          return false;
+        }
+
+        // City filter
+        if (
+          criteria.city &&
+          criteria.city !== "ALL" &&
+          projObj?.location?.city !== criteria.city
+        ) {
+          return false;
+        }
+
+        // Area filter
+        if (
+          criteria.area &&
+          criteria.area !== "ALL" &&
+          projObj?.location?.area !== criteria.area
+        ) {
+          return false;
+        }
+
+        // Unit type
+        if (
+          criteria.unitType &&
+          criteria.unitType !== "ALL" &&
+          unit.type !== criteria.unitType
+        ) {
+          return false;
+        }
+
+        // Status filter
+        if (
+          criteria.status &&
+          criteria.status !== "ALL" &&
+          unit.status !== criteria.status
+        ) {
+          return false;
+        }
+
+        // Available only
+        if (criteria.availableOnly && unit.status !== "AVAILABLE") {
+          return false;
+        }
+
+        // Price range
+        if (criteria.minPrice !== undefined && unit.price < criteria.minPrice)
+          return false;
+        if (criteria.maxPrice !== undefined && unit.price > criteria.maxPrice)
+          return false;
+
+        // Area range
+        if (criteria.minArea !== undefined && unit.area < criteria.minArea)
+          return false;
+        if (criteria.maxArea !== undefined && unit.area > criteria.maxArea)
+          return false;
+
+        // Bedrooms
+        if (criteria.bedrooms && criteria.bedrooms !== "ALL") {
+          if (criteria.bedrooms === "4+" && unit.bedrooms < 4) return false;
+          if (
+            criteria.bedrooms !== "4+" &&
+            unit.bedrooms !== parseInt(criteria.bedrooms, 10)
+          )
+            return false;
+        }
+
+        // Bathrooms
+        if (criteria.bathrooms && criteria.bathrooms !== "ALL") {
+          if (criteria.bathrooms === "3+" && unit.bathrooms < 3) return false;
+          if (
+            criteria.bathrooms !== "3+" &&
+            unit.bathrooms !== parseInt(criteria.bathrooms, 10)
+          )
+            return false;
+        }
+
+        // Finishing
+        if (
+          criteria.finishing &&
+          criteria.finishing !== "ALL" &&
+          unit.finishing !== criteria.finishing
+        ) {
+          return false;
+        }
+
+        // View
+        if (
+          criteria.view &&
+          criteria.view !== "ALL" &&
+          unit.view !== criteria.view
+        ) {
+          return false;
+        }
+
+        // Search Query
+        if (q) {
+          const projectNameEn = projObj?.name?.en?.toLowerCase() || "";
+          const projectNameAr = projObj?.name?.ar || "";
+          const cityStr = projObj?.location?.city?.toLowerCase() || "";
+          const matches =
+            unit.unitNumber.toLowerCase().includes(q) ||
+            projectNameEn.includes(q) ||
+            projectNameAr.includes(q) ||
+            unit.type.toLowerCase().includes(q) ||
+            cityStr.includes(q);
+          if (!matches) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (criteria.sortBy === "priceAsc") return a.price - b.price;
+        if (criteria.sortBy === "priceDesc") return b.price - a.price;
+        if (criteria.sortBy === "areaDesc") return b.area - a.area;
+        return 0;
+      });
+  }, [units, projects, criteria]);
 
   const handleOpenReservation = (unit: IUnit) => {
     const pId = typeof unit.projectId === "object" ? unit.projectId?._id : (unit.projectId as string);
@@ -197,16 +329,16 @@ function UnitsContent() {
       {/* Header Section */}
       <section className="pt-36 pb-16 px-5 md:px-10 border-b border-stone-200 bg-white">
         <div className="mx-auto max-w-[1680px]">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <div ref={pageTitleRef} className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <div className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.25em] text-[#9b7c52] mb-3">
+              <div data-page-title-animate className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.25em] text-[#9b7c52] mb-3">
                 <Sparkles className="h-3 w-3" />
                 <span>{t("unitsPage.tag")}</span>
               </div>
-              <h1 className="text-4xl md:text-6xl lg:text-7xl font-normal tracking-tight uppercase text-stone-950">
+              <h1 data-page-title-animate className="text-4xl md:text-6xl lg:text-7xl font-normal tracking-tight uppercase text-stone-950">
                 {t("unitsPage.title")}
               </h1>
-              <p className="mt-4 font-mono text-xs md:text-sm text-stone-600 max-w-2xl leading-relaxed">
+              <p data-page-title-animate className="mt-4 font-mono text-xs md:text-sm text-stone-600 max-w-2xl leading-relaxed">
                 {t("unitsPage.sub")}
               </p>
             </div>
@@ -226,136 +358,18 @@ function UnitsContent() {
             </div>
           </div>
 
-          {/* Multifaceted Filter Bar */}
-          <div className="mt-12 p-4 bg-white border border-stone-200 shadow-sm space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-              {/* Search */}
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder={t("unitsPage.searchPlaceholder")}
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className={`w-full bg-stone-50 border border-stone-200 px-3 py-2 ${isRTL ? "pr-9 text-right" : "pl-9 text-left"} text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#c5a880] focus:bg-white`}
-                />
-                <Search className={`absolute ${isRTL ? "right-3" : "left-3"} top-2.5 h-3.5 w-3.5 text-stone-400`} />
-              </div>
-
-              {/* Project Filter */}
-              <select
-                value={selectedProjectId}
-                onChange={(e) => setSelectedProjectId(e.target.value)}
-                className="bg-stone-50 border border-stone-200 px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-[#c5a880] font-mono text-[0.7rem]"
-              >
-                <option value="ALL">{t("unitsPage.allProjects")}</option>
-                {projects.map((p) => (
-                  <option key={p._id} value={p._id}>
-                    {getLocalized(p.name.en, p.name.ar)} ({localizeCity(p.location.city)})
-                  </option>
-                ))}
-              </select>
-
-              {/* Unit Type Filter */}
-              <select
-                value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="bg-stone-50 border border-stone-200 px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-[#c5a880] font-mono uppercase text-[0.7rem]"
-              >
-                <option value="ALL">{t("unitsPage.allTypes")}</option>
-                <option value="APARTMENT">{localizeUnitType("APARTMENT")}</option>
-                <option value="VILLA">{localizeUnitType("VILLA")}</option>
-                <option value="TOWNHOUSE">{localizeUnitType("TOWNHOUSE")}</option>
-                <option value="TWIN_HOUSE">{localizeUnitType("TWIN_HOUSE")}</option>
-                <option value="DUPLEX">{localizeUnitType("DUPLEX")}</option>
-                <option value="PENTHOUSE">{localizeUnitType("PENTHOUSE")}</option>
-                <option value="CHALET">{localizeUnitType("CHALET")}</option>
-                <option value="COMMERCIAL">{localizeUnitType("COMMERCIAL")}</option>
-                <option value="LAND">{localizeUnitType("LAND")}</option>
-                <option value="OFFICE">{localizeUnitType("OFFICE")}</option>
-              </select>
-
-              {/* Bedrooms Filter */}
-              <select
-                value={selectedBedrooms}
-                onChange={(e) => setSelectedBedrooms(e.target.value)}
-                className="bg-stone-50 border border-stone-200 px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-[#c5a880] font-mono text-[0.7rem]"
-              >
-                <option value="ALL">{t("unitsPage.anyBedrooms")}</option>
-                <option value="0">{t("unitsPage.studio")}</option>
-                <option value="1">1 {t("unitsPage.bedroom")}</option>
-                <option value="2">2 {t("unitsPage.bedrooms")}</option>
-                <option value="3">3 {t("unitsPage.bedrooms")}</option>
-                <option value="4+">4+ {t("unitsPage.bedrooms")}</option>
-              </select>
-
-              {/* Status & Sort */}
-              <div className="flex items-center gap-2">
-                <select
-                  value={selectedStatus}
-                  onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-1/2 bg-stone-50 border border-stone-200 px-2.5 py-2 text-xs text-stone-900 focus:outline-none focus:border-[#c5a880] font-mono uppercase text-[0.68rem]"
-                >
-                  <option value="AVAILABLE">{t("unitsPage.available")}</option>
-                  <option value="ALL">{t("unitsPage.allStates")}</option>
-                  <option value="RESERVED">{t("unitsPage.reserved")}</option>
-                </select>
-
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="w-1/2 bg-stone-50 border border-stone-200 px-2.5 py-2 text-xs text-stone-900 focus:outline-none focus:border-[#c5a880] font-mono text-[0.68rem]"
-                >
-                  <option value="priceAsc">{t("unitsPage.sortPriceAsc")}</option>
-                  <option value="priceDesc">{t("unitsPage.sortPriceDesc")}</option>
-                  <option value="areaDesc">{t("unitsPage.sortAreaDesc")}</option>
-                </select>
-              </div>
-            </div>
-
-            {/* Active Filters Pill Strip */}
-            {(selectedProjectId !== "ALL" || selectedType !== "ALL" || selectedBedrooms !== "ALL" || searchQuery) && (
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-stone-100 font-mono text-[0.65rem]">
-                <span className="text-stone-500">{t("unitsPage.activeFilters")}</span>
-                {selectedProjectId !== "ALL" && (
-                  <span className="px-2 py-0.5 bg-stone-100 text-stone-800 border border-stone-200 flex items-center gap-1">
-                    {language === "ar" ? "المشروع: " : "Project: "}
-                    {projects.find((p) => p._id === selectedProjectId)
-                      ? getLocalized(
-                          projects.find((p) => p._id === selectedProjectId)?.name.en,
-                          projects.find((p) => p._id === selectedProjectId)?.name.ar
-                        )
-                      : selectedProjectId}
-                    <button type="button" onClick={() => setSelectedProjectId("ALL")}>×</button>
-                  </span>
-                )}
-                {selectedType !== "ALL" && (
-                  <span className="px-2 py-0.5 bg-stone-100 text-stone-800 border border-stone-200 flex items-center gap-1">
-                    {language === "ar" ? "النوع: " : "Type: "}
-                    {localizeUnitType(selectedType)}
-                    <button type="button" onClick={() => setSelectedType("ALL")}>×</button>
-                  </span>
-                )}
-                {selectedBedrooms !== "ALL" && (
-                  <span className="px-2 py-0.5 bg-stone-100 text-stone-800 border border-stone-200 flex items-center gap-1">
-                    {language === "ar" ? "الغرف: " : "Beds: "}
-                    {selectedBedrooms === "0" ? t("unitsPage.studio") : selectedBedrooms}
-                    <button type="button" onClick={() => setSelectedBedrooms("ALL")}>×</button>
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedProjectId("ALL");
-                    setSelectedType("ALL");
-                    setSelectedBedrooms("ALL");
-                    setSearchQuery("");
-                  }}
-                  className={`text-stone-600 hover:text-stone-950 underline ${isRTL ? "mr-auto" : "ml-auto"}`}
-                >
-                  {t("unitsPage.resetAll")}
-                </button>
-              </div>
-            )}
+          {/* Advanced Multifaceted Filter Bar */}
+          <div className="mt-10">
+            <UnitsFilterBar
+              criteria={criteria}
+              onChange={setCriteria}
+              onReset={() => setCriteria(initialCriteria)}
+              projects={projects}
+              availableCities={availableCities}
+              availableAreas={availableAreas}
+              totalUnitsCount={units.length}
+              filteredCount={filteredUnits.length}
+            />
           </div>
         </div>
       </section>
@@ -388,13 +402,7 @@ function UnitsContent() {
               </p>
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedProjectId("ALL");
-                  setSelectedType("ALL");
-                  setSelectedStatus("ALL");
-                  setSelectedBedrooms("ALL");
-                  setSearchQuery("");
-                }}
+                onClick={() => setCriteria(initialCriteria)}
                 className="mt-4 px-6 py-2.5 bg-[#111110] text-white font-mono text-xs uppercase tracking-wider font-semibold hover:bg-[#c5a880] hover:text-[#111110] transition-colors"
               >
                 {t("unitsPage.showAll")}
