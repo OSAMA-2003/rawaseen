@@ -91,13 +91,14 @@ export function IntroStatement() {
       ref={root}
       id="vision"
       className="
-        mx-auto
-        max-w-[1680px]
-        px-5
-        py-[8vh]
-        md:px-10
-        md:py-[24vh]
-      "
+  mx-auto
+  max-w-[1680px]
+  px-5
+  pt-[8vh]
+  pb-0
+  md:px-10
+  md:py-[24vh]
+"
     >
       <div className="grid gap-10 md:grid-cols-12">
         <p
