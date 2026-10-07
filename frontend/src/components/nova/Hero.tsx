@@ -54,7 +54,7 @@ export function Hero() {
         });
 
         gsap.set(buildingRef.current, {
-          yPercent: isMobile ? 30 : 36,
+          yPercent: isMobile ? 40 : 46,
           scale: isMobile ? 0.98 : 0.96,
         });
 
@@ -117,13 +117,26 @@ export function Hero() {
          * SMOOTH SCROLL
          */
 
+        /*
+        * SMOOTH SCROLL
+        *
+        * Shorter scroll distance + faster scrub
+        * = smoother and more responsive movement.
+        */
+
         const scrollTl = gsap.timeline({
           scrollTrigger: {
             trigger: rootRef.current,
             start: "top top",
-            end: isMobile ? "+=85%" : "+=100%",
+
+            // Shorter distance so the animation finishes faster.
+            end: isMobile ? "+=55%" : "+=65%",
+
             pin: true,
-            scrub: isMobile ? 0.2 : 0.35,
+
+            // Lower value = follows the user's scroll more directly.
+            scrub: isMobile ? 0.1 : 0.15,
+
             invalidateOnRefresh: true,
             anticipatePin: 1,
           },
@@ -136,8 +149,8 @@ export function Hero() {
         scrollTl.to(
           backgroundRef.current,
           {
-            scale: isMobile ? 1.025 : 1.04,
-            yPercent: isMobile ? 1 : 2,
+            scale: isMobile ? 1.018 : 1.025,
+            yPercent: isMobile ? 0.5 : 1,
             duration: 1,
             ease: "none",
           },
@@ -147,17 +160,16 @@ export function Hero() {
         /*
          * CONTENT
          *
-         * مهم:
-         * لا نستخدم opacity هنا حتى لا يختفي الكلام
-         * عند الرجوع بالسكرول لأعلى.
+         * Very subtle movement.
+         * No opacity so the text never disappears.
          */
 
         scrollTl.to(
           contentRef.current,
           {
-            y: isMobile ? -14 : -30,
-            scale: isMobile ? 0.99 : 0.975,
-            duration: 0.75,
+            y: isMobile ? -8 : -18,
+            scale: isMobile ? 0.995 : 0.985,
+            duration: 1,
             ease: "none",
           },
           0
@@ -165,14 +177,17 @@ export function Hero() {
 
         /*
          * BUILDING
-         * المبنى يبدأ أوطى ويطلع بشكل بسيط
+         *
+         * Smaller movement than before.
+         * This makes the building feel premium instead of
+         * looking like it's being pulled upward.
          */
 
         scrollTl.to(
           buildingRef.current,
           {
-            yPercent: isMobile ? 2 : -5,
-            scale: isMobile ? 1.01 : 1.02,
+            yPercent: isMobile ? 12 : 8,
+            scale: isMobile ? 1.008 : 1.015,
             duration: 1,
             ease: "none",
           },
@@ -186,7 +201,22 @@ export function Hero() {
         scrollTl.to(
           imageRef.current,
           {
-            scale: isMobile ? 1.018 : 1.035,
+            scale: isMobile ? 1.01 : 1.02,
+            duration: 1,
+            ease: "none",
+          },
+          0
+        );
+
+        /*
+         * BOTTOM META
+         */
+
+        scrollTl.to(
+          metaRef.current,
+          {
+            y: isMobile ? -5 : -10,
+            opacity: 0.92,
             duration: 1,
             ease: "none",
           },
@@ -449,12 +479,12 @@ export function Hero() {
       <div
         ref={buildingRef}
         className="
-          absolute inset-x-0 bottom-[5%] z-20 mx-auto
+          absolute inset-x-0 bottom-[10%] z-20 mx-auto
           flex w-full justify-center
-          will-change-transform
-          transform-gpu
-          sm:bottom-[-10%]
-          lg:bottom-[-12%]
+          
+        
+         
+          lg:bottom-[-10%]
         "
         style={{
           transform: "translate3d(0, 0, 0)",
@@ -470,7 +500,7 @@ export function Hero() {
         >
           <img
             ref={imageRef}
-            src="/hero-building.png"
+            src="/hero-building.avif"
             alt={
               isArabic
                 ? "مشروع عقاري"
@@ -479,9 +509,8 @@ export function Hero() {
             className="
               block h-auto w-full
               origin-center object-contain
-              drop-shadow-[0_-25px_70px_rgba(0,0,0,0.16)]
-              will-change-transform
-              transform-gpu
+            
+
             "
             loading="eager"
             fetchPriority="high"
