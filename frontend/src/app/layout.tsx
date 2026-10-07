@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { AuthProvider } from "../context/AuthContext";
 import { LanguageProvider } from "../i18n/LanguageContext";
+import { GlobalRefreshLoader } from "../components/common/PageLoader";
 import { Toaster } from "sonner";
 import "../styles.css";
 
@@ -61,6 +62,7 @@ export default function RootLayout({
       </head>
       <body className="bg-[#f8f6f2] text-[#182220] selection:bg-[#182220] selection:text-[#f8f6f2] antialiased">
         <LanguageProvider>
+          <GlobalRefreshLoader />
           <AuthProvider>
             {children}
             <Toaster

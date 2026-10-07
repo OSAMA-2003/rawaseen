@@ -36,10 +36,14 @@ export function PublicInquiryModal({
   const { t, getLocalized, isRTL } = useLanguage();
 
   const budgetPresets = [
-    { label: isRTL ? "5 – 8 مليون" : "5M – 8M EGP", value: 6500000 },
-    { label: isRTL ? "8 – 12 مليون" : "8M – 12M EGP", value: 10000000 },
-    { label: isRTL ? "12 – 20 مليون" : "12M – 20M EGP", value: 15000000 },
-    { label: isRTL ? "+20 مليون" : "20M+ EGP", value: 25000000 },
+    { label: isRTL ? "1 – 3 مليون" : "1M – 3M EGP", value: 2000000 },
+    { label: isRTL ? "3 – 5 مليون" : "3M – 5M EGP", value: 4000000 },
+    { label: isRTL ? "5 – 7 مليون" : "5M – 7M EGP", value: 6000000 },
+    { label: isRTL ? "7 – 10 مليون" : "7M – 10M EGP", value: 8500000 },
+    { label: isRTL ? "10 – 15 مليون" : "10M – 15M EGP", value: 12500000 },
+    { label: isRTL ? "15 – 20 مليون" : "15M – 20M EGP", value: 17500000 },
+    { label: isRTL ? "20 – 25 مليون" : "20M – 25M EGP", value: 22500000 },
+    { label: isRTL ? "+25 مليون" : "25M+ EGP", value: 30000000 },
   ];
 
   useEffect(() => {
@@ -223,7 +227,7 @@ export function PublicInquiryModal({
                 <input
                   type="tel"
                   required
-                  placeholder="+966 50 000 0000"
+                  placeholder="010 000 0000"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   className="w-full bg-stone-50 border border-stone-200 px-3 py-2 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:border-[#c5a880] focus:bg-white"
@@ -278,11 +282,10 @@ export function PublicInquiryModal({
                     key={preset.label}
                     type="button"
                     onClick={() => setBudget(preset.value)}
-                    className={`p-2 font-mono text-[0.62rem] border transition-colors ${
-                      budget === preset.value
-                        ? "bg-[#c5a880]/20 text-[#8c6b3e] border-[#c5a880] font-semibold"
-                        : "bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100"
-                    }`}
+                    className={`p-2 font-mono text-[0.62rem] border transition-colors ${budget === preset.value
+                      ? "bg-[#c5a880]/20 text-[#8c6b3e] border-[#c5a880] font-semibold"
+                      : "bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100"
+                      }`}
                   >
                     {preset.label}
                   </button>

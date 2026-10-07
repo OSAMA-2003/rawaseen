@@ -100,6 +100,14 @@ export default function LeadsPage() {
   const [selectedLead, setSelectedLead] = useState<ILead | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
+  const getLeadPrice = (lead: ILead) => {
+    return (
+      lead.unitId?.price ||
+      (lead.projectId as any)?.startingPrice ||
+      lead.budget
+    );
+  };
+
   const fetchLeads = async () => {
     setIsLoading(true);
     try {
@@ -377,7 +385,7 @@ export default function LeadsPage() {
                         {/* Budget & Next Stage Quick Advance */}
                         <div className="pt-2 border-t border-stone-100 flex items-center justify-between">
                           <span className="font-mono text-[0.68rem] text-[#9b7c52] font-semibold">
-                            {formatCurrency(lead.budget)}
+                            {formatCurrency(getLeadPrice(lead))}
                           </span>
 
                           {/* Quick advance to next stage if not won/lost */}
@@ -420,7 +428,7 @@ export default function LeadsPage() {
                   <th className="py-3 px-4 font-normal">Client Name</th>
                   <th className="py-3 px-4 font-normal">Phone</th>
                   <th className="py-3 px-4 font-normal">Project</th>
-                  <th className="py-3 px-4 font-normal">Budget</th>
+                  <th className="py-3 px-4 font-normal">Price</th>
                   <th className="py-3 px-4 font-normal">Stage</th>
                   <th className="py-3 px-4 font-normal">Source</th>
                   <th className="py-3 px-4 font-normal">Assigned Agent</th>
@@ -452,7 +460,7 @@ export default function LeadsPage() {
                         {lead.projectId?.name?.en || "—"}
                       </td>
                       <td className="py-3 px-4 text-[#9b7c52] font-semibold">
-                        {formatCurrency(lead.budget)}
+                        {formatCurrency(getLeadPrice(lead))}
                       </td>
                       <td className="py-3 px-4">
                         <span className="inline-block px-2 py-0.5 border text-[0.6rem] uppercase tracking-wider bg-stone-100 border-stone-200 text-stone-700">

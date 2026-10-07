@@ -137,7 +137,7 @@ export function CreateLeadModal({
 
             <div className="space-y-1">
               <label className="font-mono text-[0.68rem] uppercase tracking-wider text-stone-600">
-                Target Budget (EGP)
+                Price (EGP)
               </label>
               <input
                 type="number"

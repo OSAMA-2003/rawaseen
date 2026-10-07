@@ -39,6 +39,7 @@ export interface ILead {
     name: { en: string; ar: string };
     slug?: string;
     coverImage?: string;
+    startingPrice?: number;
   };
   unitId?: {
     _id: string;

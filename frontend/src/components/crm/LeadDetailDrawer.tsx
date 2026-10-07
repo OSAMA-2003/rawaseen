@@ -201,15 +201,21 @@ export function LeadDetailDrawer({
 
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-stone-200">
               <div>
-                <span className="text-[0.65rem] text-stone-500 block">INTERESTED PROJECT</span>
+                <span className="text-[0.65rem] text-stone-500 block">INTERESTED ITEM</span>
                 <span className="text-stone-900 font-sans text-xs">
-                  {lead.projectId?.name?.en || "General Portfolio Inquiry"}
+                  {lead.unitId
+                    ? `Unit ${lead.unitId.unitNumber} (${lead.unitId.type})`
+                    : lead.projectId?.name?.en || "General Portfolio Inquiry"}
                 </span>
               </div>
               <div>
-                <span className="text-[0.65rem] text-stone-500 block">ESTIMATED BUDGET</span>
+                <span className="text-[0.65rem] text-stone-500 block">PRICE</span>
                 <span className="text-[#9b7c52] font-semibold">
-                  {formatCurrency(lead.budget)}
+                  {formatCurrency(
+                    lead.unitId?.price ||
+                    lead.projectId?.startingPrice ||
+                    lead.budget
+                  )}
                 </span>
               </div>
             </div>

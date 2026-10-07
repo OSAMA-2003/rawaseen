@@ -135,7 +135,7 @@ export class LeadService {
 
     const [leads, total] = await Promise.all([
       Lead.find(filter)
-        .populate("projectId", "name slug location coverImage status")
+        .populate("projectId", "name slug location coverImage status startingPrice")
         .populate("unitId", "unitNumber type price status")
         .populate("assignedTo", "name email phone role")
         .populate("notes.createdBy", "name email role")
@@ -169,7 +169,7 @@ export class LeadService {
     }
 
     const allLeads = await Lead.find(filter)
-      .populate("projectId", "name slug coverImage")
+      .populate("projectId", "name slug coverImage startingPrice")
       .populate("unitId", "unitNumber type price")
       .populate("assignedTo", "name email role")
       .sort({ updatedAt: -1 });
@@ -198,7 +198,7 @@ export class LeadService {
    */
   static async getLeadById(id: string, currentUser: IUserDocument): Promise<ILeadDocument> {
     const lead = await Lead.findById(id)
-      .populate("projectId", "name slug location coverImage status")
+      .populate("projectId", "name slug location coverImage status startingPrice")
       .populate("unitId", "unitNumber type price area status")
       .populate("assignedTo", "name email phone role")
       .populate("notes.createdBy", "name email role");

@@ -39,6 +39,7 @@ import { api } from "@/lib/api";
 import { IUnit, UnitStatus, UnitType, UnitFinishing, UnitView } from "@/types/unit";
 import { IProject } from "@/types/project";
 import { useLanguage } from "@/i18n/LanguageContext";
+import { PageLoader } from "@/components/common/PageLoader";
 import {
   STATIC_PROJECTS,
   STATIC_UNITS,
@@ -252,12 +253,14 @@ export default function UnitDetailsPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#fcfbf9] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3 font-mono text-xs text-stone-600">
-          <div className="w-8 h-8 border-2 border-stone-300 border-t-[#c5a880] rounded-full animate-spin" />
-          <span>{language === "ar" ? "جاري تحميل تفاصيل الوحدة..." : "Loading unit details..."}</span>
-        </div>
-      </div>
+      <PageLoader
+        isLoading={true}
+        text={
+          language === "ar"
+            ? "جاري تحميل تفاصيل الوحدة..."
+            : "Loading unit details..."
+        }
+      />
     );
   }
 
