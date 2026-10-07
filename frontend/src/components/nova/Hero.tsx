@@ -264,7 +264,7 @@ export function Hero() {
       ref={rootRef}
       id="top"
       className="
-        relative h-screen min-h-[680px] w-full
+        relative h-screen min-h-screen w-full
         overflow-hidden bg-[#eff3f5] select-none
       "
     >
@@ -547,59 +547,10 @@ export function Hero() {
         </div>
       </div>
 
-      {/* BOTTOM META */}
-      <div
-        ref={metaRef}
-        className="
-          absolute bottom-6 left-0 right-0 z-40
-          mx-auto flex max-w-[1500px]
-          items-end justify-between
-          px-6
-          text-[9px] uppercase
-          tracking-[0.2em]
-          text-[#485652]/75
-          will-change-transform
-          sm:bottom-7 sm:px-10
-        "
-      >
-        <div className="hidden sm:block">
-          <span className="mb-1 block">
-            {isArabic
-              ? "اكتشف ما يناسبك"
-              : "Find What Fits You"}
-          </span>
 
-          <span className="text-[#485652]/45">
-            01 / 03
-          </span>
-        </div>
 
-        <div className="text-right">
-          <span className="mb-1 block">
-            {isArabic
-              ? "عقارات مختارة"
-              : "Selected Properties"}
-          </span>
 
-          <span className="text-[#485652]/45">
-            {isArabic
-              ? "مشاريع • وحدات • مساحات"
-              : "Projects • Units • Spaces"}
-          </span>
-        </div>
-      </div>
 
-      {/* BOTTOM TRANSITION */}
-      <div
-        className="
-          pointer-events-none
-          absolute inset-x-0 bottom-0
-          z-50 h-28
-          bg-gradient-to-t
-          from-[#f8f6f2]
-          to-transparent
-        "
-      />
     </section>
   );
 }
