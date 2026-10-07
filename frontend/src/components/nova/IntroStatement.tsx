@@ -97,7 +97,7 @@ export function IntroStatement() {
   pt-[8vh]
   pb-0
   md:px-10
-  md:py-[24vh]
+ 
 "
     >
       <div className="grid gap-10 md:grid-cols-12">

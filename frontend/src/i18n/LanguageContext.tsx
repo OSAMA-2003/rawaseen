@@ -147,13 +147,13 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     return enVal || arVal || "";
   };
 
+  // Format all numbers/prices using English digits (0-9) regardless of language
   const formatPrice = (amount?: number): string => {
     if (typeof amount !== "number" || isNaN(amount)) return "—";
-    return new Intl.NumberFormat(language === "ar" ? "ar-EG" : "en-US", {
-      style: "currency",
-      currency: "EGP",
+    const formattedNumber = new Intl.NumberFormat("en-US", {
       maximumFractionDigits: 0,
     }).format(amount);
+    return language === "ar" ? `${formattedNumber} ج.م` : `${formattedNumber} EGP`;
   };
 
   const localizeStatus = (status: string): string => {
