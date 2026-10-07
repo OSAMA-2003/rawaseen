@@ -8,7 +8,7 @@ const getCookieOptions = (): CookieOptions => {
   return {
     httpOnly: true,
     secure: isProduction,
-    sameSite: isProduction ? "strict" : "lax",
+    sameSite: isProduction ? "none" : "lax",
     maxAge: 8 * 60 * 60 * 1000, // 8 hours matching JWT duration
   };
 };

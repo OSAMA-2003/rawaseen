@@ -15,9 +15,27 @@ export const createApp = (): Application => {
   app.use(helmet());
 
   // CORS Configuration
+  const allowedOrigins = [
+    env.FRONTEND_URL,
+    "https://rawaseen.vercel.app",
+    "http://rawaseen.vercel.app",
+    "https://www.rawaseen.vercel.app",
+    "http://localhost:3000",
+    "http://localhost:5000",
+  ];
+
   app.use(
     cors({
-      origin: [env.FRONTEND_URL, "http://localhost:3000"],
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+          allowedOrigins.includes(origin) ||
+          /\.vercel\.app$/.test(origin)
+        ) {
+          return callback(null, true);
+        }
+        return callback(null, true);
+      },
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
