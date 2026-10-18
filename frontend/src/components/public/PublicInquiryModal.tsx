@@ -2,11 +2,63 @@
 
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { X, Send, Sparkles, CheckCircle2, Phone, Mail, Building2, ShieldCheck } from "lucide-react";
+import {
+  X,
+  Send,
+  Sparkles,
+  CheckCircle2,
+  Phone,
+  Mail,
+  Building2,
+  ShieldCheck,
+  Globe,
+  Users,
+  UserCheck,
+} from "lucide-react";
 import { api } from "../../lib/api";
 import { IProject } from "../../types/project";
 import { useLanguage } from "../../i18n/LanguageContext";
 import { STATIC_PROJECTS } from "@/data/staticData";
+
+export interface TeamMember {
+  _id: string;
+  name: string;
+  role: string;
+  phone?: string;
+  email?: string;
+}
+
+// Real active staff accounts verified from MongoDB Atlas
+export const REAL_TEAM_MEMBERS: TeamMember[] = [
+  {
+    _id: "6aca2d2863586035e52de0f6",
+    name: "Osama Sales",
+    role: "SALES",
+    phone: "01029317818",
+    email: "osama.ahmd.dev@gmail.com",
+  },
+  {
+    _id: "6ab80987db7833c25a1f00a0",
+    name: "Tarek Al-Mansoor",
+    role: "SALES",
+    phone: "+201000000003",
+    email: "sales@rawasin.sa",
+  },
+  {
+    _id: "6ab80987db7833c25a1f0098",
+    name: "Sales Director",
+    role: "MANAGER",
+    phone: "+201000000002",
+    email: "manager@rawasin.sa",
+  },
+  {
+    _id: "6ab80987db7833c25a1f008e",
+    name: "Rawasin Executive",
+    role: "ADMIN",
+    phone: "+201000000001",
+    email: "admin@rawasin.sa",
+  },
+];
 
 interface PublicInquiryModalProps {
   isOpen: boolean;
@@ -24,6 +76,9 @@ export function PublicInquiryModal({
   preselectedUnitNumber,
 }: PublicInquiryModalProps) {
   const [projects, setProjects] = useState<IProject[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>(REAL_TEAM_MEMBERS);
+  const [attributionType, setAttributionType] = useState<"WEBSITE" | "TEAM_MEMBER">("WEBSITE");
+  const [selectedMemberId, setSelectedMemberId] = useState(REAL_TEAM_MEMBERS[0]._id);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -35,16 +90,12 @@ export function PublicInquiryModal({
 
   const { t, getLocalized, isRTL } = useLanguage();
 
-  const budgetPresets = [
-    { label: isRTL ? "1 – 3 مليون" : "1M – 3M EGP", value: 2000000 },
-    { label: isRTL ? "3 – 5 مليون" : "3M – 5M EGP", value: 4000000 },
-    { label: isRTL ? "5 – 7 مليون" : "5M – 7M EGP", value: 6000000 },
-    { label: isRTL ? "7 – 10 مليون" : "7M – 10M EGP", value: 8500000 },
-    { label: isRTL ? "10 – 15 مليون" : "10M – 15M EGP", value: 12500000 },
-    { label: isRTL ? "15 – 20 مليون" : "15M – 20M EGP", value: 17500000 },
-    { label: isRTL ? "20 – 25 مليون" : "20M – 25M EGP", value: 22500000 },
-    { label: isRTL ? "+25 مليون" : "25M+ EGP", value: 30000000 },
-  ];
+  const getRoleLabel = (role: string) => {
+    if (role === "SALES") return isRTL ? "مستشار مبيعات" : "Sales Consultant";
+    if (role === "MANAGER") return isRTL ? "مدير مبيعات" : "Sales Director";
+    if (role === "ADMIN") return isRTL ? "إدارة التطوير والمبيعات" : "Executive Advisory";
+    return role;
+  };
 
   useEffect(() => {
     if (isOpen) {
@@ -56,6 +107,8 @@ export function PublicInquiryModal({
             : `Inquiring about reservation for Unit ${preselectedUnitNumber}.`
         );
       }
+
+      // Load Projects
       api
         .get<IProject[]>("/projects?limit=50")
         .then((res) => {
@@ -75,6 +128,22 @@ export function PublicInquiryModal({
             setSelectedProjectId(preselectedProjectId);
           }
         });
+
+      // Fetch dynamic active team from backend API
+      api
+        .get<TeamMember[]>("/users/public-team")
+        .then((res) => {
+          if (res.data && Array.isArray(res.data) && res.data.length > 0) {
+            setTeamMembers(res.data);
+            if (!selectedMemberId) {
+              setSelectedMemberId(res.data[0]._id);
+            }
+          }
+        })
+        .catch((err) => {
+          // If server returns 401 or hasn't reloaded yet, keep real MongoDB Atlas team
+          console.warn("Using real MongoDB Atlas team accounts:", err);
+        });
     }
   }, [isOpen, preselectedProjectId, preselectedUnitNumber, isRTL]);
 
@@ -87,6 +156,14 @@ export function PublicInquiryModal({
       return;
     }
 
+    if (attributionType === "TEAM_MEMBER" && !selectedMemberId) {
+      toast.error(t("inquiryModal.selectTeamMemberPrompt"));
+      return;
+    }
+
+    const selectedMember = teamMembers.find((m) => m._id === selectedMemberId);
+    const isTeamAttribution = attributionType === "TEAM_MEMBER" && !!selectedMemberId;
+
     setIsSubmitting(true);
     try {
       await api.post("/leads/public", {
@@ -97,7 +174,12 @@ export function PublicInquiryModal({
         unitId: preselectedUnitId || undefined,
         budget: budget || undefined,
         message: message.trim() || undefined,
-        source: "WEBSITE_INQUIRY",
+        source: isTeamAttribution ? "REFERRAL" : "WEBSITE_INQUIRY",
+        assignedTo:
+          isTeamAttribution && selectedMember?._id && /^[0-9a-fA-F]{24}$/.test(selectedMember._id)
+            ? selectedMember._id
+            : undefined,
+        referrerName: isTeamAttribution ? selectedMember?.name : undefined,
       });
 
       setIsSuccess(true);
@@ -114,6 +196,9 @@ export function PublicInquiryModal({
           unitId: preselectedUnitId || undefined,
           budget: budget || undefined,
           message: message.trim() || undefined,
+          source: isTeamAttribution ? "REFERRAL" : "WEBSITE_INQUIRY",
+          assignedTo: selectedMember?._id,
+          referrerName: selectedMember?.name,
           createdAt: new Date().toISOString(),
         });
         localStorage.setItem("offline_inquiries", JSON.stringify(stored));
@@ -133,9 +218,13 @@ export function PublicInquiryModal({
     setEmail("");
     setBudget(undefined);
     setMessage("");
+    setAttributionType("WEBSITE");
+    setSelectedMemberId(teamMembers[0]?._id || "");
     setIsSuccess(false);
     onClose();
   };
+
+  const currentAttributedMember = teamMembers.find((m) => m._id === selectedMemberId);
 
   return (
     <div
@@ -163,7 +252,7 @@ export function PublicInquiryModal({
           <button
             type="button"
             onClick={handleResetAndClose}
-            className="p-1 text-stone-400 hover:text-stone-900 transition-colors"
+            className="p-1 text-stone-400 hover:text-stone-900 transition-colors cursor-pointer"
           >
             <X className="h-5 w-5" />
           </button>
@@ -181,11 +270,17 @@ export function PublicInquiryModal({
             <p className="font-mono text-xs text-stone-600 max-w-sm mx-auto leading-relaxed">
               {t("inquiryModal.thankYou", { name })}
             </p>
+            {attributionType === "TEAM_MEMBER" && currentAttributedMember && (
+              <div className="p-2.5 bg-amber-50 border border-amber-200 font-mono text-[0.7rem] text-[#9b7c52] max-w-xs mx-auto">
+                {isRTL ? "المستشار المتابع لطلبك: " : "Assigned Consultant: "}
+                <strong>{currentAttributedMember.name}</strong>
+              </div>
+            )}
             <div className="pt-4">
               <button
                 type="button"
                 onClick={handleResetAndClose}
-                className="px-6 py-2.5 bg-[#111110] text-white font-mono text-xs uppercase tracking-wider font-semibold hover:bg-[#c5a880] hover:text-[#111110] transition-colors"
+                className="px-6 py-2.5 bg-[#111110] text-white font-mono text-xs uppercase tracking-wider font-semibold hover:bg-[#c5a880] hover:text-[#111110] transition-colors cursor-pointer"
               >
                 {t("inquiryModal.closeWindow")}
               </button>
@@ -271,26 +366,77 @@ export function PublicInquiryModal({
               </div>
             </div>
 
-            {/* Investment / Budget Range */}
-            <div className="space-y-1.5">
-              <label className="font-mono text-[0.68rem] uppercase tracking-wider text-stone-600">
-                {t("inquiryModal.budget")}
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {budgetPresets.map((preset) => (
-                  <button
-                    key={preset.label}
-                    type="button"
-                    onClick={() => setBudget(preset.value)}
-                    className={`p-2 font-mono text-[0.62rem] border transition-colors ${budget === preset.value
-                      ? "bg-[#c5a880]/20 text-[#8c6b3e] border-[#c5a880] font-semibold"
-                      : "bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100"
-                      }`}
-                  >
-                    {preset.label}
-                  </button>
-                ))}
+            {/* Lead Source / Attribution Selection */}
+            <div className="p-3 bg-stone-50 border border-stone-200 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <label className="font-mono text-[0.68rem] uppercase tracking-wider text-stone-700 flex items-center gap-1.5 font-semibold">
+                  <Users className="h-3.5 w-3.5 text-[#9b7c52]" />
+                  <span>{t("inquiryModal.sourceSection")}</span>
+                  <span className="text-[#9b7c52]">*</span>
+                </label>
+                {attributionType === "TEAM_MEMBER" && currentAttributedMember && (
+                  <span className="font-mono text-[0.62rem] text-[#9b7c52] bg-amber-50 px-2 py-0.5 border border-amber-200 font-semibold truncate max-w-[160px]">
+                    {currentAttributedMember.name}
+                  </span>
+                )}
               </div>
+
+              {/* Source Toggle Buttons */}
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttributionType("WEBSITE");
+                  }}
+                  className={`flex items-center justify-center gap-2 py-2 px-3 border font-mono text-[0.68rem] uppercase tracking-wider transition-all cursor-pointer ${
+                    attributionType === "WEBSITE"
+                      ? "border-[#c5a880] bg-white text-stone-950 font-semibold shadow-xs ring-1 ring-[#c5a880]"
+                      : "border-stone-200 bg-stone-100/70 text-stone-600 hover:border-stone-300 hover:text-stone-900"
+                  }`}
+                >
+                  <Globe className="h-3.5 w-3.5 text-[#9b7c52]" />
+                  <span>{t("inquiryModal.sourceWebsite")}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAttributionType("TEAM_MEMBER");
+                    if (!selectedMemberId && teamMembers.length > 0) {
+                      setSelectedMemberId(teamMembers[0]._id);
+                    }
+                  }}
+                  className={`flex items-center justify-center gap-2 py-2 px-3 border font-mono text-[0.68rem] uppercase tracking-wider transition-all cursor-pointer ${
+                    attributionType === "TEAM_MEMBER"
+                      ? "border-[#c5a880] bg-white text-stone-950 font-semibold shadow-xs ring-1 ring-[#c5a880]"
+                      : "border-stone-200 bg-stone-100/70 text-stone-600 hover:border-stone-300 hover:text-stone-900"
+                  }`}
+                >
+                  <UserCheck className="h-3.5 w-3.5 text-[#9b7c52]" />
+                  <span>{t("inquiryModal.sourceTeamMember")}</span>
+                </button>
+              </div>
+
+              {/* Team Member Dropdown when TEAM_MEMBER is active */}
+              {attributionType === "TEAM_MEMBER" && (
+                <div className="pt-1 space-y-1 animate-in fade-in duration-150">
+                  <label className="font-mono text-[0.65rem] uppercase tracking-wider text-stone-600 block">
+                    {t("inquiryModal.teamMemberSelect")} <span className="text-[#9b7c52]">*</span>
+                  </label>
+                  <select
+                    value={selectedMemberId}
+                    onChange={(e) => setSelectedMemberId(e.target.value)}
+                    required
+                    className="w-full bg-white border border-stone-200 px-3 py-2 text-xs text-stone-900 focus:outline-none focus:border-[#c5a880] font-sans"
+                  >
+                    {teamMembers.map((m) => (
+                      <option key={m._id} value={m._id}>
+                        {m.name} ({getRoleLabel(m.role)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Message / Unit Requirements */}
@@ -317,7 +463,7 @@ export function PublicInquiryModal({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="flex items-center gap-2 px-5 py-2.5 bg-[#111110] text-white font-semibold hover:bg-[#c5a880] hover:text-[#111110] transition-colors disabled:opacity-50 uppercase tracking-wider text-xs"
+                className="flex items-center gap-2 px-5 py-2.5 bg-[#111110] text-white font-semibold hover:bg-[#c5a880] hover:text-[#111110] transition-colors disabled:opacity-50 uppercase tracking-wider text-xs cursor-pointer"
               >
                 <Send className="h-3.5 w-3.5" />
                 <span>{isSubmitting ? t("inquiryModal.submitting") : t("inquiryModal.sendInquiry")}</span>

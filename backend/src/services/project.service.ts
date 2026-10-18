@@ -216,10 +216,35 @@ export class ProjectService {
     };
   }
 
-  static async getProjectBySlug(slug: string) {
-    const project = await Project.findOne({ slug: slug.toLowerCase() });
+  static async getProjectByIdOrSlug(identifier: string) {
+    let project: IProjectDocument | null = null;
+    const mongoose = require("mongoose");
+
+    if (mongoose.Types.ObjectId.isValid(identifier)) {
+      project = await Project.findById(identifier);
+    }
+
     if (!project) {
-      throw ApiError.notFound(`Project with slug '${slug}' not found`);
+      project = await Project.findOne({ slug: identifier.toLowerCase() });
+    }
+
+    if (!project) {
+      const cleanSlug = identifier.toLowerCase().replace(/^proj-/, "");
+      project = await Project.findOne({ slug: cleanSlug });
+    }
+
+    if (!project) {
+      const words = identifier.toLowerCase().replace(/[^a-z0-9]/g, " ").trim().split(/\s+/).filter(Boolean);
+      for (const word of words) {
+        if (word.length >= 3 && !["the", "and", "for"].includes(word)) {
+          project = await Project.findOne({ slug: { $regex: word, $options: "i" } });
+          if (project) break;
+        }
+      }
+    }
+
+    if (!project) {
+      throw ApiError.notFound(`Project '${identifier}' not found`);
     }
 
     // Calculate real-time unit statistics for this project
@@ -269,12 +294,12 @@ export class ProjectService {
     };
   }
 
-  static async getProjectById(id: string): Promise<IProjectDocument> {
-    const project = await Project.findById(id);
-    if (!project) {
-      throw ApiError.notFound("Project not found");
-    }
-    return project;
+  static async getProjectBySlug(slug: string) {
+    return this.getProjectByIdOrSlug(slug);
+  }
+
+  static async getProjectById(id: string) {
+    return this.getProjectByIdOrSlug(id);
   }
 
   static async createProject(input: CreateProjectInput): Promise<IProjectDocument> {

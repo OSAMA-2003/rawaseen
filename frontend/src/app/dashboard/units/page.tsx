@@ -869,7 +869,7 @@ function UnitsInventoryContent() {
                 ? (unit.projectId as any)
                 : null;
             const projectNameEn = proj?.name?.en || "Development";
-            const projectSlug = proj?.slug;
+            const projectIdentifier = proj?._id || proj?.slug;
             const unitImage =
               unit.images && unit.images.length > 0
                 ? unit.images[0]
@@ -938,9 +938,9 @@ function UnitsInventoryContent() {
 
                       <div className="flex items-center gap-1.5 font-mono text-xs text-stone-500 mt-0.5">
                         <Building2 className="h-3 w-3 text-[#9b7c52]" />
-                        {projectSlug ? (
+                        {projectIdentifier ? (
                           <Link
-                            href={`/projects/${projectSlug}`}
+                            href={`/projects/${projectIdentifier}`}
                             target="_blank"
                             className="hover:underline text-stone-700 truncate"
                           >

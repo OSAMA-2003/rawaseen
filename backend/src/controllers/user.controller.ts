@@ -64,4 +64,17 @@ export class UserController {
       return next(error);
     }
   }
+
+  static async getPublicTeam(req: Request, res: Response, next: NextFunction) {
+    try {
+      const users = await UserService.getPublicTeam();
+      return sendSuccess({
+        res,
+        message: "Public team directory retrieved successfully",
+        data: users,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  }
 }

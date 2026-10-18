@@ -14,8 +14,9 @@ const router = Router();
 
 // Public Routes
 router.get("/", validate(getProjectsQuerySchema), ProjectController.getProjects);
-router.get("/:slug", ProjectController.getProjectBySlug);
 router.get("/id/:id", ProjectController.getProjectById);
+router.get("/slug/:slug", ProjectController.getProjectBySlug);
+router.get("/:id", ProjectController.getProjectById);
 
 // Protected Staff Routes (Managers and Admins)
 router.post(

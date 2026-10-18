@@ -31,12 +31,12 @@ import { Navigation } from "@/components/nova/Navigation";
 import { PublicInquiryModal } from "@/components/public/PublicInquiryModal";
 import { api } from "@/lib/api";
 import { IProject } from "@/types/project";
-import { IUnit, UnitStatus, UnitType, UnitFinishing, UnitView } from "@/types/unit";
+import { IUnit } from "@/types/unit";
 import { useLanguage } from "@/i18n/LanguageContext";
 import { PageLoader } from "@/components/common/PageLoader";
 import {
   STATIC_PROJECTS,
-  STATIC_UNITS,
+  getStaticProjectById,
   getStaticProjectBySlug,
   getStaticUnitsByProjectId,
 } from "@/data/staticData";
@@ -44,7 +44,7 @@ import {
 export default function ProjectDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const slug = params?.slug as string;
+  const id = (params?.id || params?.slug) as string;
 
   const [project, setProject] = useState<IProject | null>(null);
   const [units, setUnits] = useState<IUnit[]>([]);
@@ -81,50 +81,104 @@ export default function ProjectDetailsPage() {
     let isMounted = true;
     setIsLoading(true);
 
-    // Try fetching live data or fallback to rich static data
-    api
-      .get<IProject>(`/projects/slug/${slug}`)
-      .then(async (res) => {
-        if (!isMounted) return;
-        if (res.data) {
-          setProject(res.data);
+    const loadProjectData = async () => {
+      try {
+        if (!id) {
+          if (isMounted) {
+            setProject(null);
+            setIsLoading(false);
+          }
+          return;
+        }
+
+        // 1. Fetch real project data by [id] from the backend
+        let projectData: IProject | null = null;
+        try {
+          const res = await api.get<any>(`/projects/${id}`);
+          projectData = res?.data?.project || res?.data || null;
+        } catch (apiErr) {
+          console.warn("Direct project fetch by ID/slug returned:", apiErr);
+        }
+
+        // 2. If direct endpoint returned nothing, match against the live backend projects list
+        if (!projectData || !projectData._id) {
           try {
-            const unitsRes = await api.get<IUnit[]>(`/units?projectId=${res.data._id}`);
-            if (isMounted && unitsRes.data && unitsRes.data.length > 0) {
-              setUnits(unitsRes.data);
-            } else {
-              setUnits(getStaticUnitsByProjectId(res.data._id));
+            const listRes = await api.get<IProject[]>("/projects?limit=50");
+            if (listRes?.data && Array.isArray(listRes.data) && listRes.data.length > 0) {
+              const cleanId = id.toLowerCase().replace(/^proj-/, "");
+              projectData =
+                listRes.data.find(
+                  (p) =>
+                    p._id === id ||
+                    p.slug?.toLowerCase() === id.toLowerCase() ||
+                    p.slug?.toLowerCase() === cleanId ||
+                    (p.slug && (p.slug.includes(cleanId) || cleanId.includes(p.slug)))
+                ) || null;
             }
-          } catch {
-            if (isMounted) setUnits(getStaticUnitsByProjectId(res.data._id));
+          } catch (listErr) {
+            console.warn("Projects list fallback returned:", listErr);
+          }
+        }
+
+        // 3. Fallback to static data as safety net (if server offline or cold-starting)
+        if (!projectData || !projectData._id) {
+          const staticMatch =
+            getStaticProjectById(id) ||
+            getStaticProjectBySlug(id) ||
+            STATIC_PROJECTS.find(
+              (p) =>
+                p._id === id ||
+                p.slug?.toLowerCase() === id.toLowerCase() ||
+                p.slug?.toLowerCase().includes(id.toLowerCase().replace(/^proj-/, ""))
+            ) ||
+            STATIC_PROJECTS[0];
+
+          if (staticMatch) {
+            projectData = staticMatch;
+          }
+        }
+
+        if (!isMounted) return;
+
+        if (projectData) {
+          setProject(projectData);
+          const pId = projectData._id || (projectData as any).id;
+
+          // Fetch real units associated with this project from backend
+          try {
+            const unitsRes = await api.get<IUnit[]>(`/units?projectId=${pId}&limit=100`);
+            if (isMounted) {
+              if (unitsRes.data && Array.isArray(unitsRes.data) && unitsRes.data.length > 0) {
+                setUnits(unitsRes.data);
+              } else {
+                setUnits(getStaticUnitsByProjectId(pId) || []);
+              }
+            }
+          } catch (unitsErr) {
+            console.error("Error fetching units for project:", unitsErr);
+            if (isMounted) setUnits(getStaticUnitsByProjectId(pId) || []);
           }
         } else {
-          loadFallback();
+          setProject(null);
         }
-      })
-      .catch(() => {
-        if (isMounted) loadFallback();
-      })
-      .finally(() => {
-        if (isMounted) setIsLoading(false);
-      });
-
-    const loadFallback = () => {
-      const found = getStaticProjectBySlug(slug);
-      if (found) {
-        setProject(found);
-        setUnits(getStaticUnitsByProjectId(found._id));
-      } else {
-        // If slug not matched exactly, take the first project as demo
-        setProject(STATIC_PROJECTS[0]);
-        setUnits(getStaticUnitsByProjectId(STATIC_PROJECTS[0]._id));
+      } catch (err) {
+        console.error("Failed to load real project from backend:", err);
+        if (isMounted) {
+          setProject(STATIC_PROJECTS[0]);
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
+
+    loadProjectData();
 
     return () => {
       isMounted = false;
     };
-  }, [slug]);
+  }, [id]);
 
   // Filtered units within this project
   const filteredUnits = useMemo(() => {
@@ -195,7 +249,7 @@ export default function ProjectDetailsPage() {
           {language === "ar" ? "المشروع غير متوفر" : "Project Not Found"}
         </h2>
         <p className="font-mono text-xs text-stone-500 mt-2 mb-6">
-          {language === "ar" ? "لم نتمكن من العثور على المشروع المطلوب." : "Could not locate the requested project."}
+          {language === "ar" ? "لم نتمكن من العثور على المشروع المطلوب في قاعدة البيانات." : "Could not locate the requested project in the database."}
         </p>
         <Link
           href="/projects"
@@ -207,10 +261,15 @@ export default function ProjectDetailsPage() {
     );
   }
 
-  const primaryName = getLocalized(project.name.en, project.name.ar);
-  const secondaryName = language === "ar" ? project.name.en : project.name.ar;
-  const description = getLocalized(project.description.en, project.description.ar);
-  const allImages = project.images && project.images.length > 0 ? project.images : project.gallery && project.gallery.length > 0 ? project.gallery : [project.coverImage];
+  const primaryName = getLocalized(project.name?.en || "", project.name?.ar || "");
+  const secondaryName = language === "ar" ? project.name?.en : project.name?.ar;
+  const description = getLocalized(project.description?.en || "", project.description?.ar || "");
+  const allImages =
+    project.images && project.images.length > 0
+      ? project.images
+      : project.gallery && project.gallery.length > 0
+      ? project.gallery
+      : [project.coverImage || "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80"];
 
   return (
     <div className="min-h-screen bg-[#fcfbf9] text-stone-900">
@@ -263,7 +322,10 @@ export default function ProjectDetailsPage() {
                 <div className="flex items-center gap-2 font-mono text-xs text-stone-600 pt-1">
                   <MapPin className="h-4 w-4 text-[#c5a880]" />
                   <span>
-                    {project.location?.address}, {project.location?.area ? `${project.location.area}, ` : ""}{localizeCity(project.location?.city || "")}, {project.location?.governorate}
+                    {project.location?.address ? `${project.location.address}, ` : ""}
+                    {project.location?.area ? `${project.location.area}, ` : ""}
+                    {localizeCity(project.location?.city || "")}
+                    {project.location?.governorate ? `, ${project.location.governorate}` : ""}
                   </span>
                 </div>
               </div>
@@ -297,7 +359,7 @@ export default function ProjectDetailsPage() {
                       setSelectedUnitForInquiry(null);
                       setIsInquiryModalOpen(true);
                     }}
-                    className="px-6 py-2.5 bg-[#111110] text-white hover:bg-[#c5a880] hover:text-[#111110] font-mono text-xs uppercase tracking-wider font-semibold transition-colors shadow-sm"
+                    className="px-6 py-2.5 bg-[#111110] text-white hover:bg-[#c5a880] hover:text-[#111110] font-mono text-xs uppercase tracking-wider font-semibold transition-colors shadow-sm cursor-pointer"
                   >
                     {language === "ar" ? "طلب استفسار / حجز" : "Inquire / Book Now"}
                   </button>
@@ -311,7 +373,7 @@ export default function ProjectDetailsPage() {
                     {language === "ar" ? "المساحات" : "Area Range"}
                   </span>
                   <strong className="text-stone-900 text-sm">
-                    {project.minArea && project.maxArea ? `${project.minArea}–${project.maxArea} m²` : "Varied"}
+                    {project.minArea && project.maxArea ? `${project.minArea}–${project.maxArea} m²` : (project.minArea ? `${project.minArea} m²` : "Varied")}
                   </strong>
                 </div>
 
@@ -331,7 +393,7 @@ export default function ProjectDetailsPage() {
                     {language === "ar" ? "إجمالي الوحدات" : "Total Units"}
                   </span>
                   <strong className="text-stone-900 text-sm">
-                    {project.totalUnits || project.unitsCount || 45}
+                    {project.totalUnits || project.unitsCount || units.length || "—"}
                   </strong>
                 </div>
 
@@ -340,7 +402,7 @@ export default function ProjectDetailsPage() {
                     {language === "ar" ? "الوحدات المتاحة" : "Available"}
                   </span>
                   <strong className="text-emerald-700 text-sm">
-                    {project.availableUnits || 12} {language === "ar" ? "وحدة" : "Units"}
+                    {project.availableUnits ?? units.filter((u) => u.status === "AVAILABLE").length} {language === "ar" ? "وحدة" : "Units"}
                   </strong>
                 </div>
               </div>
@@ -451,7 +513,7 @@ export default function ProjectDetailsPage() {
                 </div>
                 <div className="flex justify-between items-center pt-2">
                   <span className="text-stone-500">{language === "ar" ? "خيارات السداد" : "Payment"}</span>
-                  <span className="font-semibold text-stone-900">{language === "ar" ? "تقسيط حتى 10 سنوات" : "Up to 10 Years"}</span>
+                  <span className="font-semibold text-stone-900">{language === "ar" ? "تقسيط مرن حتى عدة سنوات" : "Flexible Installments"}</span>
                 </div>
               </div>
             </div>
@@ -555,7 +617,7 @@ export default function ProjectDetailsPage() {
                       setSelectedUnitForInquiry(null);
                       setIsInquiryModalOpen(true);
                     }}
-                    className="w-full py-2.5 bg-stone-100 hover:bg-[#111110] hover:text-white font-mono text-xs uppercase tracking-wider font-semibold transition-colors text-stone-800"
+                    className="w-full py-2.5 bg-stone-100 hover:bg-[#111110] hover:text-white font-mono text-xs uppercase tracking-wider font-semibold transition-colors text-stone-800 cursor-pointer"
                   >
                     {language === "ar" ? "اختيار هذه الخطة" : "Select This Plan"}
                   </button>
@@ -696,7 +758,7 @@ export default function ProjectDetailsPage() {
                   setViewFilter("ALL");
                   setMaxPriceFilter(undefined);
                 }}
-                className="w-full py-1.5 border border-stone-300 hover:border-stone-900 bg-white font-mono text-[0.68rem] uppercase tracking-wider text-stone-800 transition-colors"
+                className="w-full py-1.5 border border-stone-300 hover:border-stone-900 bg-white font-mono text-[0.68rem] uppercase tracking-wider text-stone-800 transition-colors cursor-pointer"
               >
                 {language === "ar" ? "تصفير" : "Reset"}
               </button>

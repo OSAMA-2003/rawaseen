@@ -1,5 +1,16 @@
 import { Types } from "mongoose";
-import { FollowUp, ILeadDocument, IUserDocument, Lead, LeadSource, LeadStatus, UserRole } from "../models";
+import {
+  FollowUp,
+  FollowUpStatus,
+  FollowUpType,
+  ILeadDocument,
+  IUserDocument,
+  Lead,
+  LeadSource,
+  LeadStatus,
+  User,
+  UserRole,
+} from "../models";
 import { ApiError } from "../utils/apiError";
 import { PaginationMeta } from "../utils/apiResponse";
 import {
@@ -23,14 +34,47 @@ export class LeadService {
    * Public inquiry submission from website landing/catalog pages
    */
   static async submitPublicInquiry(data: PublicLeadInquiryInput): Promise<ILeadDocument> {
-    const notes = data.message
+    const noteContent: string[] = [];
+    if (data.referrerName) {
+      noteContent.push(`[Referral Attribution] Lead referred by team member: ${data.referrerName}`);
+    }
+    if (data.message) {
+      noteContent.push(data.message);
+    }
+
+    const notes = noteContent.length > 0
       ? [
           {
-            content: data.message,
+            content: noteContent.join("\n\n"),
             createdAt: new Date(),
           },
         ]
       : [];
+
+    let assignedToId: Types.ObjectId | undefined = data.assignedTo
+      ? new Types.ObjectId(data.assignedTo)
+      : undefined;
+
+    // If unassigned (e.g. direct website inquiry), automatically assign to an active
+    // sales consultant so every lead appears on a team member's dashboard to contact them
+    if (!assignedToId) {
+      const activeSalesAgent = await User.findOne({
+        role: UserRole.SALES,
+        isActive: true,
+      }).sort({ createdAt: 1 });
+
+      if (activeSalesAgent) {
+        assignedToId = activeSalesAgent._id as Types.ObjectId;
+      } else {
+        const activeManager = await User.findOne({
+          role: { $in: [UserRole.MANAGER, UserRole.ADMIN] },
+          isActive: true,
+        }).sort({ createdAt: 1 });
+        if (activeManager) {
+          assignedToId = activeManager._id as Types.ObjectId;
+        }
+      }
+    }
 
     const lead = await Lead.create({
       name: data.name,
@@ -39,10 +83,26 @@ export class LeadService {
       projectId: data.projectId ? new Types.ObjectId(data.projectId) : undefined,
       unitId: data.unitId ? new Types.ObjectId(data.unitId) : undefined,
       budget: data.budget,
-      source: data.source || LeadSource.WEBSITE_INQUIRY,
+      source: data.source || (data.assignedTo ? LeadSource.REFERRAL : LeadSource.WEBSITE_INQUIRY),
       status: LeadStatus.NEW,
+      assignedTo: assignedToId,
+      nextFollowUp: new Date(),
       notes,
     });
+
+    // Create an actionable follow-up task on the assigned team member's dashboard
+    if (assignedToId) {
+      await FollowUp.create({
+        leadId: lead._id,
+        assignedTo: assignedToId,
+        scheduledDate: new Date(),
+        type: FollowUpType.PHONE_CALL,
+        notes: data.referrerName
+          ? `[Direct Referral] Lead referred by ${data.referrerName}. Urgent contact requested.`
+          : `[Website Inquiry] New incoming client inquiry from website. Please contact client immediately.`,
+        status: FollowUpStatus.PENDING,
+      });
+    }
 
     return lead;
   }

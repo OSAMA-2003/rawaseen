@@ -883,7 +883,7 @@ export default function ProjectsPage() {
                     </Link>
 
                     <Link
-                      href={`/projects/${project.slug}`}
+                      href={`/projects/${project._id || project.slug}`}
                       target="_blank"
                       className="p-1.5 text-stone-500 hover:text-stone-900 hover:bg-stone-200 transition-colors"
                       title="View public page"

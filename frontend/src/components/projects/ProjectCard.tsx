@@ -64,7 +64,7 @@ export function ProjectCard({
       <div>
         {/* Cover Image Container */}
         <div className="relative h-64 w-full bg-stone-100 overflow-hidden">
-          <Link href={`/projects/${project.slug}`} className="block w-full h-full">
+          <Link href={`/projects/${project._id || project.slug}`} className="block w-full h-full">
             <img
               src={project.coverImage}
               alt={primaryName}
@@ -111,7 +111,7 @@ export function ProjectCard({
           {/* Title & Subtitle */}
           <div>
             <div className="flex items-start justify-between gap-3">
-              <Link href={`/projects/${project.slug}`} className="hover:text-[#9b7c52] transition-colors">
+              <Link href={`/projects/${project._id || project.slug}`} className="hover:text-[#9b7c52] transition-colors">
                 <h3 className="text-xl font-medium text-stone-900 leading-tight">
                   {primaryName}
                 </h3>
@@ -204,7 +204,7 @@ export function ProjectCard({
       {/* Card Action Buttons */}
       <div className="p-4 border-t border-stone-100 bg-stone-50/70 flex items-center gap-2">
         <Link
-          href={`/projects/${project.slug}`}
+          href={`/projects/${project._id || project.slug}`}
           className="flex-1 flex items-center justify-center gap-1.5 py-2.5 px-3 bg-[#111110] text-white hover:bg-[#c5a880] hover:text-[#111110] font-mono text-xs uppercase tracking-wider font-semibold transition-colors shadow-sm"
         >
           <span>{language === "ar" ? "تفاصيل المشروع" : "View Project"}</span>

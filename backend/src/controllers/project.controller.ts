@@ -20,11 +20,16 @@ export class ProjectController {
   static async getProjectBySlug(req: Request, res: Response, next: NextFunction) {
     try {
       const { slug } = req.params;
-      const data = await ProjectService.getProjectBySlug(slug as string);
+      const data = await ProjectService.getProjectByIdOrSlug(slug as string);
+      const projectObj = data.project.toObject();
       return sendSuccess({
         res,
         message: "Project details retrieved successfully",
-        data,
+        data: {
+          ...projectObj,
+          project: projectObj,
+          unitStats: data.unitStats,
+        },
       });
     } catch (error) {
       return next(error);
@@ -34,11 +39,16 @@ export class ProjectController {
   static async getProjectById(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
-      const project = await ProjectService.getProjectById(id as string);
+      const data = await ProjectService.getProjectByIdOrSlug(id as string);
+      const projectObj = data.project.toObject();
       return sendSuccess({
         res,
         message: "Project retrieved successfully",
-        data: project,
+        data: {
+          ...projectObj,
+          project: projectObj,
+          unitStats: data.unitStats,
+        },
       });
     } catch (error) {
       return next(error);

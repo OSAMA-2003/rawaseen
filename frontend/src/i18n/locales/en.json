@@ -267,7 +267,14 @@
     "enterNamePhone": "Please provide both your name and phone number.",
     "inquirySubmitted": "Your request has been submitted successfully.",
     "success": "Thank you for reaching out. We have received your inquiry and our consultant will contact you shortly.",
-    "close": "Close"
+    "close": "Close",
+    "sourceSection": "Inquiry Source",
+    "sourceWebsite": "Direct Website",
+    "sourceTeamMember": "Via Team Member",
+    "teamMemberSelect": "Sales Advisor / Team Member",
+    "teamMemberPlaceholder": "-- Select Team Member --",
+    "selectTeamMemberPrompt": "Please select the team member who assisted you.",
+    "teamMemberAttribution": "Referred by"
   },
   "dashboard": {
     "title": "Rawasin Real Estate Platform",

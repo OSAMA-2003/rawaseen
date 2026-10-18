@@ -42,6 +42,15 @@ export const publicLeadInquirySchema = z.object({
       .nativeEnum(LeadSource)
       .optional()
       .default(LeadSource.WEBSITE_INQUIRY),
+    assignedTo: z
+      .string()
+      .regex(objectIdRegex, "Invalid Assigned To ID format")
+      .optional(),
+    referrerName: z
+      .string()
+      .trim()
+      .max(100)
+      .optional(),
   }),
 });
 

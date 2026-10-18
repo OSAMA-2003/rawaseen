@@ -331,7 +331,7 @@ export default function PublicProjectsPage() {
 
             <div className="pt-4 border-t border-stone-200 flex items-center justify-between">
               <Link
-                href={`/projects/${selectedProjectForDetails.slug}`}
+                href={`/projects/${selectedProjectForDetails._id || selectedProjectForDetails.slug}`}
                 className="px-5 py-2.5 bg-[#111110] text-white hover:bg-[#c5a880] hover:text-[#111110] font-mono text-xs uppercase tracking-wider font-semibold transition-colors"
               >
                 {language === "ar" ? "الصفحة الكاملة للمشروع" : "Full Project Page"} {isRTL ? "←" : "→"}

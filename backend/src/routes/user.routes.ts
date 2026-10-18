@@ -12,6 +12,9 @@ import {
 
 const router = Router();
 
+// Public endpoint for inquiry attribution
+router.get("/public-team", UserController.getPublicTeam);
+
 // Staff management requires authentication and management authority
 router.use(authenticate);
 

@@ -291,7 +291,7 @@ export default function UnitDetailsPage() {
   const projectCity = project?.location?.city || (typeof unit.projectId === "object" && (unit.projectId as any)?.location?.city) || "New Sohag City";
   const projectArea = project?.location?.area || (typeof unit.projectId === "object" && (unit.projectId as any)?.location?.area) || "";
   const projectAddress = project?.location?.address || "";
-  const projectSlug = project?.slug || (typeof unit.projectId === "object" ? unit.projectId?.slug : "");
+  const projectIdentifier = project?._id || project?.slug || (typeof unit.projectId === "object" ? (unit.projectId as any)?._id || (unit.projectId as any)?.slug : "");
 
   return (
     <div className={`min-h-screen bg-[#fcfbf9] text-stone-900 ${isRTL ? "font-arabic" : ""}`} dir={isRTL ? "rtl" : "ltr"}>
@@ -310,10 +310,10 @@ export default function UnitDetailsPage() {
               <Link href="/projects" className="hover:text-stone-900 transition-colors shrink-0">
                 {language === "ar" ? "المشاريع" : "Projects"}
               </Link>
-              {projectSlug && (
+              {projectIdentifier && (
                 <>
                   <span>/</span>
-                  <Link href={`/projects/${projectSlug}`} className="hover:text-stone-900 transition-colors truncate max-w-[140px] md:max-w-none shrink-0">
+                  <Link href={`/projects/${projectIdentifier}`} className="hover:text-stone-900 transition-colors truncate max-w-[140px] md:max-w-none shrink-0">
                     {primaryProjectName}
                   </Link>
                 </>
@@ -363,9 +363,9 @@ export default function UnitDetailsPage() {
                   <span className="font-mono text-[0.62rem] uppercase tracking-wider px-3 py-1 bg-[#c5a880]/15 border border-[#c5a880]/30 font-semibold text-[#8c6b3e]">
                     {localizeUnitType(unit.type)}
                   </span>
-                  {projectSlug && (
+                  {projectIdentifier && (
                     <Link
-                      href={`/projects/${projectSlug}`}
+                      href={`/projects/${projectIdentifier}`}
                       className="font-mono text-[0.62rem] text-stone-500 hover:text-stone-900 flex items-center gap-1 transition-colors"
                     >
                       <Building2 className="h-3 w-3 text-[#9b7c52]" />
@@ -954,9 +954,9 @@ export default function UnitDetailsPage() {
                     </strong>
                   </div>
 
-                  {projectSlug && (
+                  {projectIdentifier && (
                     <Link
-                      href={`/projects/${projectSlug}`}
+                      href={`/projects/${projectIdentifier}`}
                       className="px-6 py-2.5 bg-[#111110] text-white hover:bg-[#9b7c52] font-mono text-xs uppercase tracking-wider font-semibold transition-colors flex items-center gap-2"
                     >
                       <span>{language === "ar" ? "استعراض المشروع كاملاً" : "Explore Full Project"}</span>

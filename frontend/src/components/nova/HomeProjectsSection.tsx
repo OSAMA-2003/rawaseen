@@ -206,7 +206,7 @@ export function HomeProjectsSection({ onOpenInquiry }: HomeProjectsSectionProps)
                   <div>
                     {/* Image Container with Zoom */}
                     <div className="relative h-64 w-full bg-stone-100 overflow-hidden">
-                      <Link href={`/projects/${project.slug}`} className="block w-full h-full">
+                      <Link href={`/projects/${project._id || project.slug}`} className="block w-full h-full">
                         <img
                           src={project.coverImage}
                           alt={primaryName}
@@ -242,7 +242,7 @@ export function HomeProjectsSection({ onOpenInquiry }: HomeProjectsSectionProps)
                     <div className="p-6 space-y-4">
                       <div className="space-y-1">
                         <div className="flex items-start justify-between gap-3">
-                          <Link href={`/projects/${project.slug}`} className="hover:text-[#9e825e] transition-colors">
+                          <Link href={`/projects/${project._id || project.slug}`} className="hover:text-[#9e825e] transition-colors">
                             <h3 className="text-xl font-medium text-[#182220] leading-tight">
                               {primaryName}
                             </h3>
@@ -313,7 +313,7 @@ export function HomeProjectsSection({ onOpenInquiry }: HomeProjectsSectionProps)
                   {/* Card Footer Actions */}
                   <div className="p-4 border-t border-[#f0ece5] bg-[#faf8f5] flex items-center justify-between gap-3">
                     <Link
-                      href={`/projects/${project.slug}`}
+                      href={`/projects/${project._id || project.slug}`}
                       className="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 border border-[#dcd6cc] hover:border-[#9e825e] bg-white text-[#182220] hover:text-[#9e825e] rounded-xl font-mono text-[0.7rem] uppercase tracking-wider transition-colors"
                     >
                       <span>{language === "ar" ? "تفاصيل المشروع" : "Project Details"}</span>

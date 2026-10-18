@@ -267,7 +267,14 @@
     "enterNamePhone": "يرجى إدخال الاسم ورقم الجوال.",
     "inquirySubmitted": "تم تقديم طلبك بنجاح وسيتواصل معك فريقنا.",
     "success": "شكراً لاهتمامك. تم استلام طلب الاستشارة وسيتواصل معك مستشارنا الخاص.",
-    "close": "إغلاق"
+    "close": "إغلاق",
+    "sourceSection": "مصدر التواصل / المستشار",
+    "sourceWebsite": "الموقع الإلكتروني مباشرة",
+    "sourceTeamMember": "عبر أحد أعضاء الفريق",
+    "teamMemberSelect": "اختر عضو الفريق / المستشار العقاري",
+    "teamMemberPlaceholder": "-- اختر المستشار العقاري المتابع لك --",
+    "selectTeamMemberPrompt": "يرجى اختيار عضو الفريق الذي تواصل معك.",
+    "teamMemberAttribution": "بترشيح من المستشار"
   },
   "dashboard": {
     "title": "منصة رواسن العقارية",
