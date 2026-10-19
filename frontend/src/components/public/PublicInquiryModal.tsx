@@ -103,8 +103,8 @@ export function PublicInquiryModal({
       if (preselectedUnitNumber && !message) {
         setMessage(
           isRTL
-            ? `استفسار بخصوص حجز الوحدة رقم ${preselectedUnitNumber}.`
-            : `Inquiring about reservation for Unit ${preselectedUnitNumber}.`
+            ? `  حجز    ${preselectedUnitNumber}.`
+            : ` Reserving ${preselectedUnitNumber}.`
         );
       }
 
@@ -242,7 +242,7 @@ export function PublicInquiryModal({
         <div className="p-6 border-b border-stone-200 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 font-mono text-[0.68rem] uppercase tracking-[0.2em] text-[#9b7c52] mb-1 font-semibold">
-              <Sparkles className="h-3 w-3" />
+
               <span>{t("inquiryModal.tag")}</span>
             </div>
             <h2 className="text-lg font-normal text-stone-950">
@@ -288,16 +288,7 @@ export function PublicInquiryModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="p-6 space-y-4">
-            {preselectedUnitNumber && (
-              <div className="p-3 bg-stone-50 border border-stone-200 flex items-center justify-between">
-                <span className="font-mono text-xs text-stone-900">
-                  {t("inquiryModal.unitInquiry")} <strong className="text-[#9b7c52]">{preselectedUnitNumber}</strong>
-                </span>
-                <span className="font-mono text-[0.62rem] text-emerald-700 bg-emerald-50 px-2 py-0.5 border border-emerald-200 font-semibold">
-                  {t("inquiryModal.priorityLink")}
-                </span>
-              </div>
-            )}
+
 
             {/* Name & Phone */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -388,11 +379,10 @@ export function PublicInquiryModal({
                   onClick={() => {
                     setAttributionType("WEBSITE");
                   }}
-                  className={`flex items-center justify-center gap-2 py-2 px-3 border font-mono text-[0.68rem] uppercase tracking-wider transition-all cursor-pointer ${
-                    attributionType === "WEBSITE"
-                      ? "border-[#c5a880] bg-white text-stone-950 font-semibold shadow-xs ring-1 ring-[#c5a880]"
-                      : "border-stone-200 bg-stone-100/70 text-stone-600 hover:border-stone-300 hover:text-stone-900"
-                  }`}
+                  className={`flex items-center justify-center gap-2 py-2 px-3 border font-mono text-[0.68rem] uppercase tracking-wider transition-all cursor-pointer ${attributionType === "WEBSITE"
+                    ? "border-[#c5a880] bg-white text-stone-950 font-semibold shadow-xs ring-1 ring-[#c5a880]"
+                    : "border-stone-200 bg-stone-100/70 text-stone-600 hover:border-stone-300 hover:text-stone-900"
+                    }`}
                 >
                   <Globe className="h-3.5 w-3.5 text-[#9b7c52]" />
                   <span>{t("inquiryModal.sourceWebsite")}</span>
@@ -406,11 +396,10 @@ export function PublicInquiryModal({
                       setSelectedMemberId(teamMembers[0]._id);
                     }
                   }}
-                  className={`flex items-center justify-center gap-2 py-2 px-3 border font-mono text-[0.68rem] uppercase tracking-wider transition-all cursor-pointer ${
-                    attributionType === "TEAM_MEMBER"
-                      ? "border-[#c5a880] bg-white text-stone-950 font-semibold shadow-xs ring-1 ring-[#c5a880]"
-                      : "border-stone-200 bg-stone-100/70 text-stone-600 hover:border-stone-300 hover:text-stone-900"
-                  }`}
+                  className={`flex items-center justify-center gap-2 py-2 px-3 border font-mono text-[0.68rem] uppercase tracking-wider transition-all cursor-pointer ${attributionType === "TEAM_MEMBER"
+                    ? "border-[#c5a880] bg-white text-stone-950 font-semibold shadow-xs ring-1 ring-[#c5a880]"
+                    : "border-stone-200 bg-stone-100/70 text-stone-600 hover:border-stone-300 hover:text-stone-900"
+                    }`}
                 >
                   <UserCheck className="h-3.5 w-3.5 text-[#9b7c52]" />
                   <span>{t("inquiryModal.sourceTeamMember")}</span>
